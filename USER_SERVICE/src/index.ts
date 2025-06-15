@@ -3,7 +3,7 @@ import { GlobalSettings } from './globalSettings'
 import express from 'express'
 import dotenv from 'dotenv'
 import { AppDataSource } from './db.config'
-import { UserController } from './controllers/user.controller'
+import { UserController } from './modules/user/user.controller'
 import { GlobalErrorHandler } from './utility/base.utility'
 
 dotenv.config()
@@ -14,7 +14,7 @@ app.use(express.json())
 
 app.post('/register',UserController.signup)
 
-app.post('/login', UserController.login)
+// app.post('/login', UserController.login)
 
 app.use(GlobalErrorHandler)
 

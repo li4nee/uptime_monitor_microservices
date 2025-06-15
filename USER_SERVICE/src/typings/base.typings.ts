@@ -20,3 +20,14 @@ export class PermissionNotGranted extends CustomError{
         super(messag,403)
     }
 }
+
+export enum ROLE {
+    ADMIN = "admin",
+    USER = "user",
+}
+
+export interface UserToken {
+  userId: string;
+  role: ROLE;
+  createdAt: number;
+}
