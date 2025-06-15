@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, CreateDateColumn } from 'typeorm';
 
 @Entity()
 export class User extends BaseEntity{
@@ -9,16 +9,19 @@ export class User extends BaseEntity{
   @PrimaryGeneratedColumn('uuid')
   id !: string;
 
+  @CreateDateColumn()
+  createdAt !: Date;
+
   @Column({ unique: true })
   email !: string;
 
   @Column()
   password !: string; 
 
-  @Column()
+  @Column({default: false})
   emailVerified!:boolean
 
-  @Column()
+  @Column({default:true})
   notification !:boolean
 
 }
