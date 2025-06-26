@@ -3,8 +3,8 @@ import { GlobalSettings } from './globalSettings'
 import express from 'express'
 import dotenv from 'dotenv'
 import { AppDataSource } from './db.config'
-import { UserController } from './modules/user/user.controller'
 import { GlobalErrorHandler } from './utility/base.utility'
+import { userRouter } from './modules/user/user.routes'
 
 dotenv.config()
 
@@ -12,7 +12,8 @@ dotenv.config()
 const app = express()
 app.use(express.json())
 
-app.post('/register',UserController.signup)
+// Routes
+app.use('/user', userRouter)
 
 // app.post('/login', UserController.login)
 

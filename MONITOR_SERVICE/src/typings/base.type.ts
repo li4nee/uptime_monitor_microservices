@@ -13,6 +13,14 @@ export enum NOTIFICATION_FREQUENCY {
   NONE = 'NONE'                 // Don't send notifications
 }
 
+export enum HTTP_METHOD {
+    GET = 'GET',
+    POST = 'POST',
+    PUT = 'PUT',
+    DELETE = 'DELETE',
+    PATCH = 'PATCH'
+}
+
 export class CustomError {
     statusCode: number
     message: string | null
