@@ -1,6 +1,6 @@
-import {  Column,Entity, Index} from "typeorm";
-import { NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../typings/base.type";
+import {  Column,Entity, Index, OneToMany} from "typeorm";
 import { GlobalEntity } from "./global.entity";
+import { SiteApi } from "./siteApi.entity";
 
 /**
  * Represents a site being monitored.
@@ -8,9 +8,7 @@ import { GlobalEntity } from "./global.entity";
  * @property {string} url - The URL of the site.
  * @property {string} userId - The ID of the user who owns this site.
  * @property {boolean} notification - Whether notifications are enabled for this site.
- * @property {SITE_PRIORITY} priority - The priority level of the site.
- * @property {NOTIFICATION_FREQUENCY} notificationFrequency - Frequency of notifications for this site.
- * @property {Date} lastNotificationSentAt - Timestamp of the last notification sent for this site.
+ * @property {SiteApi[]} siteApis - The APIs associated with this site.
  */
 
 @Entity()
@@ -19,18 +17,13 @@ export class Site extends GlobalEntity {
   @Column()
   url!: string;
 
+  @OneToMany(() => SiteApi, siteApi => siteApi.site)
+  siteApis!: SiteApi[];
+
   @Column()
   userId!: string;
 
   @Column({ default: true })
   notification!: boolean;
 
-  @Column({ default: SITE_PRIORITY.MEDIUM, type: 'enum', enum: SITE_PRIORITY })
-  priority!: SITE_PRIORITY;
-
-  @Column({ default: NOTIFICATION_FREQUENCY.ONCE, type: 'enum', enum: NOTIFICATION_FREQUENCY })
-  notificationFrequency!: NOTIFICATION_FREQUENCY;
-
-  @Column({ type: 'timestamp', nullable: true })
-  lastNotificationSentAt?: Date;
 }

@@ -1,6 +1,7 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 import { createClient, RedisClientType } from "redis";
 import { GlobalSettings } from "./globalSettings";
+import Redis from "ioredis";
 
 const dataStoreOptions:DataSourceOptions={
     type:"postgres",
@@ -35,3 +36,5 @@ export const connectToRedis = async (): Promise<RedisClientType> => {
   await redisClient.connect();
   return redisClient;
 };
+
+export let IoRedisClientForBullMQ = new Redis(GlobalSettings.redis.url)

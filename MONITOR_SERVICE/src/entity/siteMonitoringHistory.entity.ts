@@ -1,4 +1,4 @@
-import { Entity,Column, ManyToOne} from 'typeorm';
+import { Entity,Column, ManyToOne, Index} from 'typeorm';
 import { HTTP_METHOD } from '../typings/base.type';
 import { GlobalEntity } from './global.entity';
 import { Site } from './site.entity';
@@ -52,5 +52,10 @@ export class SiteMonitoringHistory extends GlobalEntity {
   body?: Record<string, any>;
 
   @Column()
+  @Index()
   checkedAt!: Date;
+
+  @Column({ default: 1 })
+  attemptNumber!: number;
+
 }

@@ -16,6 +16,9 @@ export class SiteApi extends GlobalEntity{
   @Column()
   path!: string;
 
+  @Column({default:true})
+  isActive!: boolean
+
   @Column({ enum: HTTP_METHOD, type: 'enum', default: HTTP_METHOD.GET })
   httpMethod!: HTTP_METHOD;
 
