@@ -34,6 +34,10 @@ export class SiteApi extends GlobalEntity{
   @Column({ nullable: true })
   maxResponseTime!: number;
 
+  @Column({default: 3})
+  maxNumberOfAttempts!: number;
+
+
   @Column({ default: SITE_PRIORITY.MEDIUM, type: 'enum', enum: SITE_PRIORITY })
   priority!: SITE_PRIORITY;
 

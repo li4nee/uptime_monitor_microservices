@@ -21,6 +21,21 @@ export enum HTTP_METHOD {
     PATCH = 'PATCH'
 }
 
+export interface SiteMoniorDTO{
+    siteId: string
+    siteApiId: string
+    url: string
+    body?: Record<string, any>
+    headers?: Record<string, string>
+    httpMethod: HTTP_METHOD
+    maxResponseTime?: number
+    priority: SITE_PRIORITY
+    notification: boolean
+    notificationFrequency: NOTIFICATION_FREQUENCY
+    lastSentNotificationAt?: Date | null
+    userId: string
+}
+
 export class CustomError {
     statusCode: number
     message: string | null

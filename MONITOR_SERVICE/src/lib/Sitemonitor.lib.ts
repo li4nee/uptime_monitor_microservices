@@ -1,27 +1,15 @@
-import { connectToRedis } from "../dbconfig"
 import { Site } from "../entity/site.entity"
 import { SiteApi } from "../entity/siteApi.entity"
 import { SiteModel } from "../repo/site.repo"
-import { SiteApiModel } from "../repo/siteApi.repo"
-import { SiteMonitoringHistoryModel } from "../repo/siteHistory.repo"
-import { SiteMonitorQueue } from "./jobs/sitemonitor.jobs"
+import { SiteMoniorDTO } from "../typings/base.type"
+import { SiteMonitorQueue } from "./queue/sitemonitor.queue"
 
 export class SiteMonitorService {
-    private redisInstance!: Awaited<ReturnType<typeof connectToRedis>>
     
     constructor(
     private readonly siteModel = SiteModel,
-    private readonly siteApiModel = SiteApiModel,
-    private readonly siteHistoryModel = SiteMonitoringHistoryModel,
     private readonly siteMonitorQueue = SiteMonitorQueue
   ) {
-  }
-
-  async init() {
-    this.redisInstance = await connectToRedis()
-    if (!this.redisInstance) {
-      console.error("Failed to connect to Redis")
-    }
   }
 
   async monitorTheSites(): Promise<void> {
@@ -42,16 +30,14 @@ export class SiteMonitorService {
           notification: true,
           notificationFrequency: true,
           lastNotificationSentAt: true,
+          
         },
       },
     })
 
     if (!sites?.length) {
-      console.log("No sites to monitor")
       return
     }
-    //.map() would return: [ [Promise, Promise], [Promise] ]
-    //.flatMap() returns: [ Promise, Promise, Promise ]
 
     const allJobPromises = sites.flatMap((site) => {
     if (!site.siteApis?.length) return [];
@@ -67,7 +53,7 @@ export class SiteMonitorService {
 }
 
   private async queueSiteApiJob(site:Site, siteApi: SiteApi): Promise<void> {
-    const jobData = {
+    const jobData:SiteMoniorDTO= {
         siteId: site.id,
         siteApiId: siteApi.id,
         url: site.url,
@@ -81,7 +67,16 @@ export class SiteMonitorService {
         lastSentNotificationAt: siteApi.lastNotificationSentAt,
         userId: site.userId,
     };
-    this.siteMonitorQueue.add("monitor-site-api", jobData).catch((error) => {
+    this.siteMonitorQueue.add("monitor-site-api", jobData,{
+      attempts: siteApi.maxNumberOfAttempts || 3,
+      backoff: {
+        type: "exponential",
+        delay: 1000, 
+      },
+      removeOnComplete: true,
+      removeOnFail: true,
+      jobId: `${site.id}-${siteApi.id}`,
+    }).catch((error) => {
         console.error(`Failed to add job for siteApi ${siteApi.id}:`, error);
     });
 }
