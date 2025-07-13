@@ -1,4 +1,4 @@
-import { AddMonitoringRoutesDto, GetMonitoringHisoryDto, GetMonitoringRoutesDto } from "./monitor.dto";
+import { AddMonitoringRoutesDto, GetMonitoringHisoryDto, GetMonitoringRoutesDto, GetOneMonthOverviewDto } from "./monitor.dto";
 
 class MonitorServiceClass{
     constructor() {
@@ -15,6 +15,11 @@ class MonitorServiceClass{
     }
 
     async getMonitoringHistory(query:GetMonitoringHisoryDto)
+    {
+
+    }
+
+    async getOneMonthOverview(query:GetOneMonthOverviewDto)
     {
 
     }

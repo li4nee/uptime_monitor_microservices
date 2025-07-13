@@ -1,5 +1,5 @@
 import { AuthenticatedRequest } from "../../typings/base.type";
-import { AddMonitoringRoutesDto, AddMonitoringRoutesDtoSchema, GetMonitoringHisoryDto, GetMonitoringHisoryDtoSchema, GetMonitoringRoutesDto, GetMonitoringRoutesDtoSchema } from "./monitor.dto";
+import { AddMonitoringRoutesDto, AddMonitoringRoutesDtoSchema, GetMonitoringHisoryDto, GetMonitoringHisoryDtoSchema, GetMonitoringRoutesDto, GetMonitoringRoutesDtoSchema, GetOneMonthOverviewDto, GetOneMonthOverviewDtoSchema } from "./monitor.dto";
 import { MonitorService } from "./monitor.service";
 import { Response } from "express";
 class MonitorControllerClass{
@@ -32,7 +32,9 @@ class MonitorControllerClass{
 
     async getOneMonthOverview(req:AuthenticatedRequest,res:Response)
     {
-
+        let body : GetOneMonthOverviewDto = await GetOneMonthOverviewDtoSchema.validate(req.query)
+        let result = await this.monitorService.getOneMonthOverview(body)
+        res.status(200).json(result)
     }
 
 }

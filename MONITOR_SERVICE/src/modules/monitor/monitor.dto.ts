@@ -101,3 +101,14 @@ export const GetMonitoringHisoryDtoSchema = yup.object().shape({
     orderBy: yup.string().oneOf(['checkedAt', 'responseTime']).default('checkedAt')
 })
 
+export interface GetOneMonthOverviewDto {
+    siteId: string
+    siteApiId?: string
+    httpMethod?: HTTP_METHOD
+}
+
+export const GetOneMonthOverviewDtoSchema = yup.object().shape({
+    siteId: yup.string().required(),
+    siteApiId: yup.string().optional(),
+    httpMethod: yup.string().oneOf(Object.values(HTTP_METHOD)).optional()
+})
