@@ -43,7 +43,6 @@ export class SiteHistoryBatchWorker {
     try {
       await SiteMonitoringHistoryModel.save(toInsert);
     } catch (err) {
-      // Optional: re-buffer or DLQ
     }
   }
 

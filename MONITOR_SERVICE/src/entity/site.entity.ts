@@ -26,4 +26,7 @@ export class Site extends GlobalEntity {
   @Column({ default: true })
   notification!: boolean;
 
+  @Column()
+  siteName!: string;
+
 }

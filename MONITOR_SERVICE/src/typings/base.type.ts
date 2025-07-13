@@ -1,3 +1,6 @@
+
+import { Request } from "express"
+
 export enum SITE_PRIORITY {
     LOW = 1,
     MEDIUM = 2,
@@ -57,4 +60,13 @@ export class PermissionNotGranted extends CustomError{
     constructor(messag:string="Permission not granted") {
         super(messag,403)
     }
+}
+
+export enum ROLE {
+  ADMIN = "admin",
+  USER = "user",
+}
+export interface AuthenticatedRequest extends Request {
+  userId?: string
+  role?:ROLE
 }

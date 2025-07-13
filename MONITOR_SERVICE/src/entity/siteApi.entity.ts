@@ -28,15 +28,11 @@ export class SiteApi extends GlobalEntity{
   @Column({ type: 'json', nullable: true })
   body?: Record<string, any>;
 
-  @Column({ default: 0 })
-  consecutiveFailure!: number;
-
   @Column({ nullable: true })
   maxResponseTime!: number;
 
   @Column({default: 3})
   maxNumberOfAttempts!: number;
-
 
   @Column({ default: SITE_PRIORITY.MEDIUM, type: 'enum', enum: SITE_PRIORITY })
   priority!: SITE_PRIORITY;
