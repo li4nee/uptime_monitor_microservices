@@ -1,6 +1,5 @@
-import { Queue } from 'bullmq';
-import { IoRedisClientForBullMQ } from '../../dbconfig';
-
+import { Queue } from "bullmq";
+import { IoRedisClientForBullMQ } from "../../dbconfig";
 
 export const SiteHistorySavingQueue = new Queue("save-site-history", {
   connection: IoRedisClientForBullMQ,
@@ -8,6 +7,6 @@ export const SiteHistorySavingQueue = new Queue("save-site-history", {
     removeOnComplete: true,
     removeOnFail: true,
     delay: 2000,
-    attempts: 2
+    attempts: 2,
   },
 });

@@ -14,7 +14,7 @@ import { generateId } from "../utils/base.utils";
 @Entity()
 export class GlobalEntity {
   @PrimaryColumn()
-  id: string = generateId()
+  id: string = generateId();
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt!: Date;

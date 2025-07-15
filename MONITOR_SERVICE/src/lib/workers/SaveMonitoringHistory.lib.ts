@@ -12,13 +12,9 @@ export class SiteHistoryBatchWorker {
   private worker: Worker;
 
   constructor() {
-    this.worker = new Worker(
-      "save-site-history",
-      this.handleJob.bind(this),
-      {
-        connection: IoRedisClientForBullMQ,
-      }
-    );
+    this.worker = new Worker("save-site-history", this.handleJob.bind(this), {
+      connection: IoRedisClientForBullMQ,
+    });
 
     this.flushTimer = setInterval(() => this.flush(), this.TIME_TO_SAVE);
 
@@ -42,8 +38,7 @@ export class SiteHistoryBatchWorker {
     const toInsert = this.buffer.splice(0, this.buffer.length);
     try {
       await SiteMonitoringHistoryModel.save(toInsert);
-    } catch (err) {
-    }
+    } catch (err) {}
   }
 
   async shutdown() {

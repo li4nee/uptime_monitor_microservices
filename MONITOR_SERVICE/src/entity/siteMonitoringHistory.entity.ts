@@ -1,8 +1,8 @@
-import { Entity,Column, ManyToOne, Index} from 'typeorm';
-import { HTTP_METHOD } from '../typings/base.type';
-import { GlobalEntity } from './global.entity';
-import { Site } from './site.entity';
-import { SiteApi } from './siteApi.entity';
+import { Entity, Column, ManyToOne, Index } from "typeorm";
+import { HTTP_METHOD } from "../typings/base.type";
+import { GlobalEntity } from "./global.entity";
+import { Site } from "./site.entity";
+import { SiteApi } from "./siteApi.entity";
 
 /**
  * Represents a history record of site monitoring checks.
@@ -23,32 +23,31 @@ import { SiteApi } from './siteApi.entity';
  */
 @Entity()
 export class SiteMonitoringHistory extends GlobalEntity {
-
   @Column()
-  status!: 'UP' | 'DOWN';
+  status!: "UP" | "DOWN";
 
   @Column()
   statusCode!: number;
 
-  @ManyToOne(()=>Site, site => site.id)
+  @ManyToOne(() => Site, (site) => site.id)
   site!: Site;
 
-  @ManyToOne(()=>SiteApi, siteApi => siteApi.id)
+  @ManyToOne(() => SiteApi, (siteApi) => siteApi.id)
   siteApi!: SiteApi;
 
   @Column()
   responseTime!: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   errorLog!: string;
 
-  @Column({enum: HTTP_METHOD, type: 'enum', default: HTTP_METHOD.GET})
-  httpMethod!: HTTP_METHOD
-  
-  @Column({ type: 'json', nullable: true })
+  @Column({ enum: HTTP_METHOD, type: "enum", default: HTTP_METHOD.GET })
+  httpMethod!: HTTP_METHOD;
+
+  @Column({ type: "json", nullable: true })
   headers?: Record<string, string>;
-  
-  @Column({ type: 'json', nullable: true })
+
+  @Column({ type: "json", nullable: true })
   body?: Record<string, any>;
 
   @Column()
@@ -58,4 +57,6 @@ export class SiteMonitoringHistory extends GlobalEntity {
   @Column({ default: 1 })
   attemptNumber!: number;
 
+  @Column({ default: false })
+  wasNotificationSent!: boolean;
 }

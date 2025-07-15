@@ -1,30 +1,473 @@
-import { AddMonitoringRoutesDto, GetMonitoringHisoryDto, GetMonitoringRoutesDto, GetOneMonthOverviewDto } from "./monitor.dto";
+import { Site } from "../../entity/site.entity";
+import { SiteApi } from "../../entity/siteApi.entity";
+import { SiteModel } from "../../repo/site.repo";
+import { SiteApiModel } from "../../repo/siteApi.repo";
+import { SiteMonitoringHistoryModel } from "../../repo/siteHistory.repo";
+import {
+  DefaultResponse,
+  InvalidInputError,
+  NOTIFICATION_FREQUENCY,
+  SITE_PRIORITY,
+} from "../../typings/base.type";
+import { getPaginationValues } from "../../utils/base.utils";
+import {
+  AddMonitoringRoutesDto,
+  GetMonitoringHisoryDto,
+  GetMonitoringRoutesDto,
+  GetOneMonthOverviewDto,
+} from "./monitor.dto";
+class MonitorServiceClass {
+  constructor(
+    private readonly siteModel = SiteModel,
+    private readonly siteApiModel = SiteApiModel,
+    private readonly siteHistoryModel = SiteMonitoringHistoryModel,
+  ) {}
 
-class MonitorServiceClass{
-    constructor() {
- 
+  async resisterRoutesApiToMonitor(
+    body: AddMonitoringRoutesDto,
+    userId: string,
+  ): Promise<DefaultResponse> {
+    if (!userId) throw new InvalidInputError("User ID is required to register monitoring routes");
+    let existingSite = await this.checkIfTheUrlExists(body.url, userId);
+    if (existingSite)
+      throw new InvalidInputError(
+        "This URL is already registered for monitoring,please edit the existing site instead of creating a new one",
+      );
+    let newSite = new Site();
+    newSite.url = body.url;
+    newSite.userId = userId;
+    newSite.notification = body.notification ?? true;
+    newSite.siteName = body.siteName ?? "";
+    newSite.siteApis = body.siteApis?.map((api) => {
+      let siteApi = new SiteApi();
+      siteApi.path = api.path;
+      siteApi.httpMethod = api.httpMethod;
+      siteApi.headers = api.headers ?? {};
+      siteApi.body = api.body ?? {};
+      siteApi.maxResponseTime = api.maxResponseTime ?? 5000;
+      siteApi.maxNumberOfAttempts = api.maxNumberOfAttempts ?? 3;
+      siteApi.priority = api.priority ?? SITE_PRIORITY.MEDIUM;
+      siteApi.notification = api.notification ?? true;
+      siteApi.notificationFrequency = api.notificationFrequency ?? NOTIFICATION_FREQUENCY.ONCE;
+      return siteApi;
+    });
+    await this.siteModel.save(newSite);
+    return new DefaultResponse(200, "Monitoring routes registered successfully");
+  }
+
+  async getMonitoringRoutes(
+    query: GetMonitoringRoutesDto,
+    userId: string,
+  ): Promise<DefaultResponse> {
+    if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring routes");
+    if (query.siteId || query.siteApiId)
+      return await this.getMonitoringRouteIdProvided(query, userId);
+    return await this.getMonitoringRoutesPaginated(query, userId);
+  }
+
+  async getMonitoringHistory(
+    query: GetMonitoringHisoryDto,
+    userId: string,
+  ): Promise<DefaultResponse> {
+    if (!query.siteId)
+      throw new InvalidInputError("Site ID is required to fetch monitoring history");
+    if (!query.siteApiId)
+      throw new InvalidInputError("Site API ID is required to fetch monitoring history");
+    if (query.startDate && query.startDate.getTime() > Date.now())
+      throw new InvalidInputError("startDate cannot be in the future");
+    if (query.endDate && query.endDate.getTime() > Date.now())
+      throw new InvalidInputError("endDate cannot be in the future");
+    if (query.startDate && query.endDate && query.startDate.getTime() > query.endDate.getTime())
+      throw new InvalidInputError("startDate cannot be after endDate");
+    if (query.monitoringHistoryId) {
+      const history = await this.siteHistoryModel.findOne({
+        where: {
+          id: query.monitoringHistoryId,
+          siteApi: { id: query.siteApiId, site: { id: query.siteId, userId } },
+        },
+      });
+      if (!history) throw new InvalidInputError("Monitoring history not found");
+      return new DefaultResponse(200, "Monitoring history fetched successfully", {
+        history: [history],
+        pagination: null,
+      });
+    }
+    let { skip, limit } = getPaginationValues(query.page || 0, query.limit || 10);
+    let queryBuilder = this.siteHistoryModel
+      .createQueryBuilder("history")
+      .leftJoinAndSelect("history.siteApi", "siteApi")
+      .leftJoinAndSelect("siteApi.site", "site")
+      .where("site.id = :siteId", { siteId: query.siteId })
+      .andWhere("siteApi.id = :siteApiId", { siteApiId: query.siteApiId })
+      .select([
+        "history.id",
+        "history.status",
+        "history.responseTime",
+        "history.checkedAt",
+        "history.wasNotificationSent",
+        "siteApi.id",
+        "siteApi.path",
+        "siteApi.httpMethod",
+        "site.id",
+        "site.url",
+      ])
+      .orderBy("history.checkedAt", "DESC")
+      .take(limit)
+      .skip(skip);
+    if (query.status) queryBuilder.andWhere("history.status = :status", { status: query.status });
+
+    if (query.startDate)
+      queryBuilder.andWhere("history.checkedAt >= :startDate", { startDate: query.startDate });
+
+    if (query.endDate)
+      queryBuilder.andWhere("history.checkedAt <= :endDate", { endDate: query.endDate });
+
+    if (query.httpMethod)
+      queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
+    const [history, total] = await queryBuilder.getManyAndCount();
+    let totalPages = Math.ceil(total / limit);
+    return new DefaultResponse(200, "Monitoring history fetched successfully", {
+      history,
+      pagination: {
+        total,
+        page: query.page || 0,
+        totalPages,
+      },
+    });
+  }
+
+  async getOneMonthOverview(query: GetOneMonthOverviewDto, userId: string) {
+    // if (!query.siteId)
+    //   throw new InvalidInputError("Site ID is required to fetch one month overview");
+    // if (!query.siteApiId)
+    //   throw new InvalidInputError("Site API ID is required to fetch one month overview");
+    // let yearAndMonth = query.yearAndMonth;
+    // let year = parseInt(yearAndMonth.split("-")[0]);
+    // let month = parseInt(yearAndMonth.split("-")[1]) - 1; // JavaScript months are 0-indexed
+    // if (isNaN(year) || isNaN(month) || month < 0 || month > 11) {
+    //   throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
+    // }
+    // let startDate = new Date(year, month, 1);
+    // let endDate = new Date(year, month + 1, 0);
+    // if (startDate.getTime() > Date.now() || endDate.getTime() > Date.now()) {
+    //   throw new InvalidInputError("Dates cannot be in the future");
+    // }
+    // let queryBuilder = this.siteHistoryModel
+    //   .createQueryBuilder("history")
+    //   .leftJoin("history.siteApi", "siteApi")
+    //   .leftJoin("siteApi.site", "site")
+    //   .where("site.id = :siteId", { siteId: query.siteId })
+    //   .andWhere("siteApi.id = :siteApiId", { siteApiId: query.siteApiId })
+    //   .select([
+    //     "history.status as status",
+    //     "history.responseTime as responseTime",
+    //     "history.checkedAt as checkedAt",
+    //     "siteApi.httpMethod as httpMethod",
+    //   ])
+    //   .andWhere("history.checkedAt >= :startDate", { startDate })
+    //   .andWhere("history.checkedAt <= :endDate", { endDate })
+    //   .orderBy("history.checkedAt", "ASC");
+    // if (query.httpMethod) {
+    //   queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
+    // }
+    // const results = await queryBuilder.getRawMany();
+    // if (results.length === 0) {
+    //   return new DefaultResponse(200, "No data found for the specified month", {
+    //     overview: [],
+    //     pagination: null,
+    //   });
+    // }
+    // let overview = results.map((result) => ({
+    //   status: result.status,
+    //   responseTime: result.responseTime,
+    //   checkedAt: new Date(result.checkedAt),
+    //   httpMethod: result.httpMethod,
+    // }));
+    // let totalResponseTime = overview.reduce((sum, item) => sum + item.responseTime, 0);
+    // let averageResponseTime = totalResponseTime / overview.length;
+    // let upCount = overview.filter(item => item.status === "UP").length;
+    // let downCount = overview.filter(item => item.status === "DOWN").length;
+    // return new DefaultResponse(200, "One month overview fetched successfully", {
+    //   overview: {
+    //     averageResponseTime,
+    //     upCount,
+    //     downCount,
+    //     totalResponseTime,
+    //     details: overview,
+    //   },
+    //   pagination: null,
+    // });
+
+    const { siteId, siteApiId, yearAndMonth, httpMethod } = query;
+    if (!siteId) throw new InvalidInputError("Site ID is required");
+    if (!siteApiId) throw new InvalidInputError("Site API ID is required");
+    if (!yearAndMonth?.match(/^\d{4}-\d{2}$/))
+      throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
+    const [year, month] = yearAndMonth.split("-").map((str) => Number(str));
+    if (month < 1 || month > 12 || isNaN(year) || isNaN(month))
+      throw new InvalidInputError("Invalid year or month");
+    const startDate = new Date(year, month - 1, 1); // JavaScript months are 0-indexed tei bhara month bata ek ghatako
+    const endDate = new Date(year, month, 0); // Last day of the month
+    if (startDate.getTime() > Date.now() || endDate.getTime() > Date.now())
+      throw new InvalidInputError("Dates cannot be in the future");
+    const queryBuilder = this.siteHistoryModel
+      .createQueryBuilder("history")
+      .innerJoin("history.siteApi", "siteApi")
+      .innerJoin("siteApi.site", "site")
+      .where("site.id = :siteId", { siteId })
+      .andWhere("site.userId = :userId", { userId })
+      .andWhere("siteApi.id = :siteApiId", { siteApiId })
+      .andWhere("history.checkedAt BETWEEN :startDate AND :endDate", { startDate, endDate });
+
+    if (httpMethod) {
+      queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod });
+    }
+    const results = await queryBuilder
+      .select([
+        `DATE_TRUNC('day', history.checkedAt) AS day`,
+        `COUNT(*) AS total`,
+        `SUM(CASE WHEN history.status = 'UP' THEN 1 ELSE 0 END) AS up`,
+        `SUM(CASE WHEN history.status = 'DOWN' THEN 1 ELSE 0 END) AS down`,
+        `AVG(history.responseTime) AS avgResponseTime`,
+      ])
+      .groupBy(`day`)
+      .orderBy(`day`, "ASC")
+      .getRawMany();
+    const dailyStatsMap: Record<string, any> = {};
+    results.forEach((row) => {
+      const dayKey = new Date(row.day).toISOString().split("T")[0];
+      dailyStatsMap[dayKey] = {
+        total: Number(row.total),
+        up: Number(row.up),
+        down: Number(row.down),
+        averageResponseTime: row.avgResponseTime ? Math.round(Number(row.avgResponseTime)) : null,
+        uptimePercentage:
+          row.total > 0 ? Math.round((Number(row.up) / Number(row.total)) * 100) : null,
+      };
+    });
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const calendar: any[] = [];
+    let upCount = 0;
+    let downCount = 0;
+    let totalResponseTime = 0;
+    let totalCount = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month - 1, day); // current month dincha
+      const key = date.toISOString().split("T")[0]; // YYYY-MM-DD format
+      const stat = dailyStatsMap[key]; // check if data exists for this day
+
+      if (stat) {
+        upCount += stat.up;
+        downCount += stat.down;
+        totalResponseTime += stat.averageResponseTime * stat.total;
+        totalCount += stat.total;
+      }
+
+      calendar.push({
+        date: key,
+        upChecks: stat?.up ?? 0,
+        downChecks: stat?.down ?? 0,
+        totalChecks: stat?.total ?? 0,
+        averageResponseTime: stat?.averageResponseTime ?? null,
+        uptimePercentage: stat?.uptimePercentage ?? null,
+      });
     }
 
-    async resisterRoutesApiToMonitor(body:AddMonitoringRoutesDto){
+    const averageResponseTime = totalCount > 0 ? Math.round(totalResponseTime / totalCount) : null;
+    return new DefaultResponse(200, "One month overview fetched successfully", {
+      overview: {
+        averageResponseTime,
+        upCount,
+        downCount,
+        totalResponseTime,
+        calendar,
+      },
+      pagination: null,
+    });
+  }
 
+  private async getMonitoringRoutesPaginated(
+    query: GetMonitoringRoutesDto,
+    userId: string,
+  ): Promise<DefaultResponse> {
+    let { limit, skip } = getPaginationValues(query.page || 0, query.limit || 10);
+    let queryBuilder = this.siteModel
+      .createQueryBuilder("site")
+      .leftJoinAndSelect("site.siteApis", "siteApi")
+      .where("site.userId = :userId", { userId: userId })
+      .select([
+        "site.id",
+        "site.url",
+        "site.notification",
+        "site.siteName",
+        "site.isActive",
+        "site.createdAt",
+        "siteApi.id",
+        "siteApi.path",
+        "siteApi.httpMethod",
+        "siteApi.notification",
+        "siteApi.isActive",
+        "siteApi.priority",
+      ])
+      .take(limit)
+      .skip(skip)
+      .orderBy(`site.${query.orderBy ?? "createdAt"}`, query.order ?? "DESC");
+
+    if (query.isActive)
+      queryBuilder.andWhere("site.isActive = :isActive", { isActive: query.isActive });
+
+    if (query.priority)
+      queryBuilder.andWhere("siteApi.priority = :priority", { priority: query.priority });
+
+    if (query.httpMethod)
+      queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
+
+    if (query.search)
+      queryBuilder.andWhere(
+        "(site.url ILIKE :search OR site.siteName ILIKE :search OR siteApi.path ILIKE :search)",
+        { search: `%${query.search}%` },
+      );
+    const [sites, total] = await queryBuilder.getManyAndCount();
+    let totalPages = Math.ceil(total / limit);
+    return new DefaultResponse(200, "Monitoring routes fetched successfully", {
+      sites,
+      total,
+      totalPages,
+    });
+  }
+
+  private async getMonitoringRouteIdProvided(
+    query: GetMonitoringRoutesDto,
+    userId: string,
+  ): Promise<DefaultResponse> {
+    const { siteId, siteApiId } = query;
+
+    if (siteApiId && !siteId) {
+      const siteApi = await this.findSiteApiWithSite(siteApiId, userId);
+      if (!siteApi) {
+        throw new InvalidInputError("Site API not found for this user");
+      }
+      const { site, ...rest } = siteApi;
+      return new DefaultResponse(200, "Monitoring route fetched successfully", {
+        site: site,
+        siteApis: [rest],
+        pagination: null,
+      });
     }
 
-    async getMonitoringRoutes(query:GetMonitoringRoutesDto)
-    {
-
+    if (!siteId) {
+      throw new InvalidInputError("Site ID is required to fetch monitoring routes");
     }
 
-    async getMonitoringHistory(query:GetMonitoringHisoryDto)
-    {
+    const sitePromise = this.findSiteById(siteId, userId);
 
+    if (siteApiId) {
+      const [site, siteApi] = await Promise.all([
+        sitePromise,
+        this.findSiteApi(siteApiId, siteId, userId),
+      ]);
+
+      if (!site) throw new InvalidInputError("Site not found");
+      if (!siteApi) throw new InvalidInputError("Site API not found for this site and user");
+
+      return new DefaultResponse(200, "Monitoring route fetched successfully", {
+        site,
+        siteApis: [siteApi],
+        pagination: null,
+      });
     }
 
-    async getOneMonthOverview(query:GetOneMonthOverviewDto)
-    {
+    let page = query.page || 0;
+    let limit = query.limit || 10;
+    let skip = page * limit;
 
-    }
+    const [site, [siteApis, total]] = await Promise.all([
+      sitePromise,
+      this.siteApiModel.findAndCount({
+        where: { site: { id: siteId, userId } },
+        select: this.siteApiSelectFields(),
+        order: { priority: query.order ?? "DESC" },
+        skip,
+        take: limit,
+      }),
+    ]);
 
-    
+    if (!site) throw new InvalidInputError("Site not found");
+
+    return new DefaultResponse(200, "Monitoring route fetched successfully", {
+      site,
+      siteApis,
+      pagination: {
+        total,
+        page,
+        limit,
+      },
+    });
+  }
+
+  private findSiteById(siteId: string, userId: string): Promise<Site | null> {
+    return this.siteModel.findOne({
+      where: { id: siteId, userId },
+      select: {
+        id: true,
+        url: true,
+        notification: true,
+        siteName: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  private findSiteApi(siteApiId: string, siteId: string, userId: string): Promise<SiteApi | null> {
+    return this.siteApiModel.findOne({
+      where: {
+        id: siteApiId,
+        site: { id: siteId, userId },
+      },
+      select: this.siteApiSelectFields(),
+    });
+  }
+
+  private findSiteApiWithSite(siteApiId: string, userId: string): Promise<SiteApi | null> {
+    return this.siteApiModel.findOne({
+      where: {
+        id: siteApiId,
+        site: { userId },
+      },
+      relations: { site: true },
+      select: {
+        ...this.siteApiSelectFields(),
+        site: {
+          id: true,
+          url: true,
+          notification: true,
+          siteName: true,
+          isActive: true,
+          createdAt: true,
+        },
+      },
+    });
+  }
+
+  private siteApiSelectFields(): any {
+    return {
+      id: true,
+      path: true,
+      httpMethod: true,
+      notification: true,
+      isActive: true,
+      priority: true,
+    };
+  }
+
+  private async checkIfTheUrlExists(url: string, userId: string): Promise<boolean> {
+    const site = await this.siteModel.findOne({
+      where: { url, userId },
+      select: { id: true },
+    });
+    return site ? true : false;
+  }
 }
 
 export const MonitorService = new MonitorServiceClass();

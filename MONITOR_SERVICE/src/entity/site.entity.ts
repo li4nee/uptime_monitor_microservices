@@ -1,4 +1,4 @@
-import {  Column,Entity, Index, OneToMany} from "typeorm";
+import { Column, Entity, Index, OneToMany } from "typeorm";
 import { GlobalEntity } from "./global.entity";
 import { SiteApi } from "./siteApi.entity";
 
@@ -17,8 +17,8 @@ export class Site extends GlobalEntity {
   @Column()
   url!: string;
 
-  @OneToMany(() => SiteApi, siteApi => siteApi.site)
-  siteApis!: SiteApi[];
+  @OneToMany(() => SiteApi, (siteApi) => siteApi.site, { cascade: true, nullable: true })
+  siteApis!: SiteApi[] | undefined | null;
 
   @Column()
   userId!: string;
@@ -29,4 +29,6 @@ export class Site extends GlobalEntity {
   @Column()
   siteName!: string;
 
+  @Column({ default: true })
+  isActive!: boolean;
 }
