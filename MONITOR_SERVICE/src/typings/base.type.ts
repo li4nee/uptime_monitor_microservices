@@ -60,6 +60,18 @@ export class PermissionNotGranted extends CustomError {
   }
 }
 
+export class ResourceNotFoundError extends CustomError {
+  constructor(message: string = "Resource not found") {
+    super(message, 404);
+  }
+}
+
+export class InternalServerError extends CustomError {
+  constructor(message: string = "Internal server error") {
+    super(message, 500);
+  }
+}
+
 export enum ROLE {
   ADMIN = "admin",
   USER = "user",

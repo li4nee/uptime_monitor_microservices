@@ -1,15 +1,12 @@
 import * as amqp from "amqplib";
 import { GlobalSettings } from "../globalSettings";
 import { InternalServerError } from "../typings/base.type";
-
-export class MessageBrokerProducer {
+export class MessageBrokerConsumer {
   private connection?: amqp.ChannelModel;
   private channel?: amqp.Channel;
 
   private readonly url = GlobalSettings.rabbitMQ.url;
-  private readonly exchangeName = GlobalSettings.rabbitMQ.exchange;
   private readonly queueName = GlobalSettings.rabbitMQ.queue;
-  private readonly routingKey = GlobalSettings.rabbitMQ.routingKey;
 
   async createConnection(): Promise<amqp.ChannelModel> {
     try {
@@ -44,51 +41,13 @@ export class MessageBrokerProducer {
     }
   }
 
-  async assertExchange(exchange: string, type: string = "direct"): Promise<boolean> {
-    if (!this.channel) {
-      throw new InternalServerError("Channel not created. Call createChannel() first.");
-    }
-    try {
-      await this.channel.assertExchange(exchange, type, { durable: true });
-      return true;
-    } catch (err) {
-      throw new InternalServerError("Failed to assert exchange: " + (err as Error).message);
-    }
-  }
-
-  async bindQueue(queue: string, exchange: string, routingKey: string): Promise<boolean> {
-    if (!this.channel) {
-      throw new InternalServerError("Channel not created. Call createChannel() first.");
-    }
-    try {
-      await this.channel.bindQueue(queue, exchange, routingKey);
-      return true;
-    } catch (err) {
-      throw new InternalServerError("Failed to bind queue: " + (err as Error).message);
-    }
-  }
-
   async setupBroker(): Promise<void> {
     try {
       await this.createConnection();
       await this.createChannel();
-      await this.assertExchange(this.exchangeName);
       await this.assertQueue(this.queueName, true);
-      await this.bindQueue(this.queueName, this.exchangeName, this.routingKey);
     } catch (err) {
       throw new InternalServerError("Failed to setup message broker: " + (err as Error).message);
-    }
-  }
-
-  async publish(message:string): Promise<void> {
-    if (!this.channel) {
-      throw new InternalServerError("Channel not created. Call createChannel() first.");
-    }
-    try {
-      const buffer = Buffer.from(message);
-      this.channel.publish(this.exchangeName, this.routingKey, buffer);
-    } catch (err) {
-      throw new InternalServerError("Failed to publish message: " + (err as Error).message);
     }
   }
 
