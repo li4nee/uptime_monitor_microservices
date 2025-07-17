@@ -1,13 +1,14 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 import { GlobalSettings } from "./globalSettings";
 import { createClient, RedisClientType } from "redis";
+import { User } from "./entity/user.entity";
 
 const dataStoreOptions:DataSourceOptions={
     type:"postgres",
     url:GlobalSettings.database.url,
-    synchronize :false,
+    synchronize :true,
     logging: false,
-    entities:[__dirname + '/entity/**/*.entity.{js,ts}'],
+    entities:[User],
     migrations: [__dirname+ '/migrations/**/*.{js,ts}'],
     extra: {
       connectionLimit:25,

@@ -1,0 +1,17 @@
+FROM node:23-alpine3.20
+
+WORKDIR /app
+
+# only the package.json is copied to leverage the docker cache
+COPY package.json .
+
+RUN yarn install
+
+ENV NODE_ENV=DEVELOPMENT
+
+# copy the rest of the files
+COPY . .
+
+EXPOSE 3000
+
+CMD [ "yarn", "start:dev" ]

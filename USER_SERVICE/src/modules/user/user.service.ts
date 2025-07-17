@@ -2,14 +2,14 @@ import { Repository } from "typeorm"
 import { loginDto, signupDto } from "./user.dto"
 import { User } from "../../entity/user.entity"
 import { UserModel } from "../../repo/user.repo"
-import { InvalidInputError } from "../../typings/base.typings"
+import { InvalidInputError, ROLE } from "../../typings/base.typings"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { GlobalSettings } from "../../globalSettings"
 import { LoginStore } from "../../utility/login.utility"
 
 export class UserService{
-    private UserModel : Repository<User> = UserModel
+    private userModel = UserModel
     
     async signup (body:signupDto){
       if(body.password!=body.confirmPassword)
@@ -23,7 +23,10 @@ export class UserService{
       user.password=hashed
       user.notification=true
       user.emailVerified=false
-      await this.UserModel.save(user)
+      await this.userModel.save(user)
+
+      // call the broker to send email verification
+
       return {message:"Signup successful. Please verify your email."}
     }
 
@@ -35,8 +38,8 @@ export class UserService{
       const isPasswordValid = await bcrypt.compare(body.password, user.password)
       if(!isPasswordValid)
         throw new InvalidInputError("Invalid password")
-      const accessToken = this.generateToken(user.id);
-      const refreshToken = this.generateToken(user.id,"7d");
+      const accessToken = this.generateToken(user.id,ROLE.USER,"2m");
+      const refreshToken = this.generateToken(user.id,ROLE.USER,"7d");
       LoginStore.setuserToken(refreshToken,user.id,60*60*24*7)
       return {message:"Login successful", accessToken, refreshToken}
     }
@@ -48,12 +51,12 @@ export class UserService{
 
     private async checkIfUserExistsAndReturnUser(data: string, type: "email" | "id") {
       const whereClause = type === "email" ? { email: data } : { id: data }
-      const user = await this.UserModel.findOne({where: whereClause,select: { id: true }})
+      const user = await this.userModel.findOne({where: whereClause,select: { id: true ,password:true}})
       return user;
     }
 
-    private generateToken(userId: string,expiresIn: jwt.SignOptions["expiresIn"]="1h") {
-      const token = jwt.sign({ id: userId },GlobalSettings.JWT_SECRET as string,{expiresIn});
+    private generateToken(userId: string,role:ROLE,expiresIn: jwt.SignOptions["expiresIn"]="2m") {
+      const token = jwt.sign({ userId ,role ,createdAt:Date.now()},GlobalSettings.JWT_SECRET as string,{expiresIn});
       return token;
     } 
 

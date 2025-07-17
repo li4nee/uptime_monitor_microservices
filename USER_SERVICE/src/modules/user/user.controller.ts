@@ -18,8 +18,8 @@ class UserControllerClass{
     {
       let data : loginDto = await loginValidationSchema.validate(req.body)
       let result = await this.userService.login(data)
-      setCookie(res,"refreshToken",result.refreshToken,60*60*24*7)
-      setCookie(res,"accessToken",result.accessToken,60*60)
+      setCookie(res,"refreshToken",result.refreshToken,60*60*24*7*1000)
+      setCookie(res,"accessToken",result.accessToken,60*10*1000)
       res.status(200).json(result)
       return 
     }

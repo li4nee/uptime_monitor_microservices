@@ -8,9 +8,10 @@ import {
   GetMonitoringRoutesDtoSchema,
   GetOneMonthOverviewDto,
   GetOneMonthOverviewDtoSchema,
-} from "./monitor.dto";
-import { MonitorService } from "./monitor.service";
+} from "./monitorV1.dto";
+
 import { Response } from "express";
+import { MonitorService } from "./monitorV1.service";
 class MonitorControllerClass {
   constructor(private readonly monitorService = MonitorService) {}
 

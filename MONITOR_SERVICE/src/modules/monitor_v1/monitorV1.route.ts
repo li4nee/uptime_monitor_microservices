@@ -1,20 +1,20 @@
 import { Router } from "express";
 import { Wrapper } from "../../utils/base.utils";
-import { MonitorController } from "./monitor.controller";
-const monitorRouter = Router();
+import { MonitorController } from "./monitorV1.controller";
+const monitorV1Router = Router();
 
-monitorRouter.post(
+monitorV1Router.post(
   "/register",
   Wrapper(MonitorController.registerSiteMonitor.bind(MonitorController)),
 );
-monitorRouter.get("/routes", Wrapper(MonitorController.getRoutes.bind(MonitorController)));
-monitorRouter.get(
+monitorV1Router.get("/routes", Wrapper(MonitorController.getRoutes.bind(MonitorController)));
+monitorV1Router.get(
   "/history",
   Wrapper(MonitorController.getMonitoringHistory.bind(MonitorController)),
 );
-monitorRouter.get(
+monitorV1Router.get(
   "/overview",
   Wrapper(MonitorController.getOneMonthOverview.bind(MonitorController)),
 );
 
-export { monitorRouter };
+export { monitorV1Router };

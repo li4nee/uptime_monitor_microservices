@@ -8,7 +8,7 @@ export async function validateDTO(DTO: yup.AnySchema, data: any) {
 
 export const Wrapper = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res, next).catch(next);
+    Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
 

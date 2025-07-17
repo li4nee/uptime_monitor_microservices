@@ -1,53 +1,55 @@
-import express, { Request} from 'express'
-import { createProxyMiddleware } from 'http-proxy-middleware'
-import dotenv from 'dotenv'
-import fs from 'fs'
-import path from 'path'
-import morgan from 'morgan'
-import { IncomingMessage } from 'http'
+import express, { Request, Response, NextFunction } from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import morgan from "morgan";
+import { IncomingMessage } from "http";
+import { GlobalSettings } from "./globalSettings";
+import { authenticate } from "./middleware/authenticate";
+import cookieParser from 'cookie-parser';
+dotenv.config();
 
-dotenv.config()
+const app = express();
+app.use(cookieParser());
+const accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
 
-const app = express()
-
-
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, 'access.log'),
-  { flags: 'a' }
-)
-
-morgan.token('client-ip', (req: IncomingMessage): string => {
+morgan.token("client-ip", (req: IncomingMessage): string => {
   const expressReq = req as Request;
-  const ip = expressReq.header?.('x-forwarded-for') || expressReq.socket?.remoteAddress;
-  return ip || '';
+  const ip = expressReq.header?.("x-forwarded-for") || expressReq.socket?.remoteAddress;
+  return ip || "";
 });
-
 
 app.use(
   morgan(':client-ip ":method :url" :status :response-time ms - UA: :user-agent', {
     stream: accessLogStream,
-  })
-)
+  }),
+);
 
-
-app.use(
-  '/auth',
-  createProxyMiddleware({
-    target: 'http://user-service:3001',
-    changeOrigin: true,
-    pathRewrite: { '^/auth': '' },
-  })
-)
-
-app.use(
-  '/monitor',
-  createProxyMiddleware({
-    target: 'http://monitor-service:3002',
-    changeOrigin: true,
-    pathRewrite: { '^/monitor': '' },
-  })
-)
-
-app.listen(3000, () => {
-  console.log('API Gateway listening on port 3000')
+app.use((req:Request,res:Response,next:NextFunction)=>{
+  console.log("HIT")
+  next()
 })
+
+app.use(
+  "/user",
+  createProxyMiddleware({
+    target: "http://user-service:3001",
+    changeOrigin: true,
+    pathRewrite: { "^/user": "" },
+  }),
+);
+
+app.use(
+  "/monitor",
+  authenticate,
+  createProxyMiddleware({
+    target: "http://monitor-service:3002",
+    changeOrigin: true,
+    pathRewrite: { "^/monitor": "" },
+  }),
+);
+
+app.listen(GlobalSettings.port, () => {
+  console.log("API Gateway listening on port", GlobalSettings.port);
+});

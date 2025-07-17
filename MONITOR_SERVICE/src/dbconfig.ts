@@ -6,7 +6,7 @@ import Redis from "ioredis";
 const dataStoreOptions: DataSourceOptions = {
   type: "postgres",
   url: GlobalSettings.database.url,
-  synchronize: false,
+  synchronize: true,
   logging: false,
   entities: [__dirname + "/entity/**/*.entity.{js,ts}"],
   migrations: [__dirname + "/migrations/**/*.{js,ts}"],
