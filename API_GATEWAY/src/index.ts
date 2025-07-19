@@ -1,5 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import {
+  createProxyMiddleware,
+  RequestHandler,
+  Options,
+  RequestHandler as ProxyRequestHandler,
+} from "http-proxy-middleware";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
@@ -7,7 +12,8 @@ import morgan from "morgan";
 import { IncomingMessage } from "http";
 import { GlobalSettings } from "./globalSettings";
 import { authenticate } from "./middleware/authenticate";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
+import { AuthenticatedRequest } from "./typings/base.typings";
 dotenv.config();
 
 const app = express();
@@ -26,10 +32,10 @@ app.use(
   }),
 );
 
-app.use((req:Request,res:Response,next:NextFunction)=>{
-  console.log("HIT")
-  next()
-})
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log("HIT");
+  next();
+});
 
 app.use(
   "/user",
@@ -47,6 +53,14 @@ app.use(
     target: "http://monitor-service:3002",
     changeOrigin: true,
     pathRewrite: { "^/monitor": "" },
+    on: {
+      proxyReq: (proxyReq, req: AuthenticatedRequest, res: Response) => {
+        if (req.userId) {
+          proxyReq.setHeader("x-user-id-from-proxy", req.userId);
+          proxyReq.setHeader("x-user-role-from-proxy", req.role || "user");
+        }
+      },
+    },
   }),
 );
 

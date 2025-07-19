@@ -27,7 +27,9 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
         req.role = result.role;
         next();
         return;
-      } catch (err) {}
+      } catch (err) {
+        console.log("Invalid access token:", err);
+      }
     }
 
     if (refreshToken) {
@@ -53,6 +55,7 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
         setCookie(res, "accessToken", newAccessToken, 60 * 10 * 1000);
         req.userId = userToken.userId;
         req.role = userToken.role;
+        console.log(req.userId);
         next();
         return;
       } catch (err) {
