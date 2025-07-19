@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-app.use("/v1",monitorV1Router);
+app.use("/v1", monitorV1Router);
 
 app.use(GlobalErrorHandler);
 app.listen(GlobalSettings.port, () => {

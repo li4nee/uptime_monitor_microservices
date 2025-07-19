@@ -1,29 +1,26 @@
-import { Request,Response } from "express";
+import { Request, Response } from "express";
 import { loginDto, loginValidationSchema, signupDto, signupValidationSchema } from "./user.dto";
 import { UserService } from "./user.service";
 import { setCookie } from "../../utility/base.utility";
 
-class UserControllerClass{
-    private userService = new UserService();
+class UserControllerClass {
+  private userService = new UserService();
 
-    async signup(req:Request,res:Response)
-    {
-      let data : signupDto = await signupValidationSchema.validate(req.body)
-      let message = await this.userService.signup(data)
-      res.status(201).json(message)
-      return
-    }
+  async signup(req: Request, res: Response) {
+    let data: signupDto = await signupValidationSchema.validate(req.body);
+    let message = await this.userService.signup(data);
+    res.status(201).json(message);
+    return;
+  }
 
-    async login(req:Request,res:Response)
-    {
-      let data : loginDto = await loginValidationSchema.validate(req.body)
-      let result = await this.userService.login(data)
-      setCookie(res,"refreshToken",result.refreshToken,60*60*24*7*1000)
-      setCookie(res,"accessToken",result.accessToken,60*10*1000)
-      res.status(200).json(result)
-      return 
-    }
- 
+  async login(req: Request, res: Response) {
+    let data: loginDto = await loginValidationSchema.validate(req.body);
+    let result = await this.userService.login(data);
+    setCookie(res, "refreshToken", result.refreshToken, 60 * 60 * 24 * 7 * 1000);
+    setCookie(res, "accessToken", result.accessToken, 60 * 10 * 1000);
+    res.status(200).json(result);
+    return;
+  }
 }
 
-export const UserController = new UserControllerClass()
+export const UserController = new UserControllerClass();

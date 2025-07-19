@@ -17,4 +17,9 @@ upwithlogs:
 	@trap 'echo "\nShutting down..."; sudo docker compose down; sudo docker image prune -f' INT EXIT; \
 	sudo docker compose logs -f api-gateway user-service monitor-service worker
 
+lint:
+	prettier --write "./API_GATEWAY/src/**/*.ts" "./MONITOR_SERVICE/src/**/*.ts" "./USER_SERVICE/src/**/*.ts" "./WORKER/src/**/*.ts"
+
+
+
 

@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import * as yup from "yup"
-import { CustomError } from '../typings/base.typings';
+import { Request, Response, NextFunction } from "express";
+import * as yup from "yup";
+import { CustomError } from "../typings/base.typings";
 
 export async function validateDTO(DTO: yup.AnySchema, data: any) {
-    await DTO.validate(data,{abortEarly:false});
+  await DTO.validate(data, { abortEarly: false });
 }
 
 export const Wrapper = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
@@ -12,31 +12,26 @@ export const Wrapper = (fn: (req: Request, res: Response, next: NextFunction) =>
   };
 };
 
-export function GlobalErrorHandler(err:Error,req:Request,res: Response,next:NextFunction)
-{   
-    console.log("ROUTE:",req.url,"METHOD:",req.method)
-    console.log("ERROR MESSAGE :", err.message)
-    console.log("ERROR STACK :", err.stack)
-    if(err instanceof yup.ValidationError)
-    {
-        res.status(400).json({message:err.errors})
-        return 
-    }
-    else if (err instanceof CustomError){
-        let statusCode = err.statusCode
-        res.status(statusCode).json({message:err.message})
-        return
-    }
-    else
-    {   
-        res.status(500).json({message:"Opps some unexpected error occured"})
-        return 
-    }
+export function GlobalErrorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  console.log("ROUTE:", req.url, "METHOD:", req.method);
+  console.log("ERROR MESSAGE :", err.message);
+  console.log("ERROR STACK :", err.stack);
+  if (err instanceof yup.ValidationError) {
+    res.status(400).json({ message: err.errors });
+    return;
+  } else if (err instanceof CustomError) {
+    let statusCode = err.statusCode;
+    res.status(statusCode).json({ message: err.message });
+    return;
+  } else {
+    res.status(500).json({ message: "Opps some unexpected error occured" });
+    return;
+  }
 }
 
 export function setCookie(res: Response, name: string, value: string, time: number) {
   res.cookie(name, value, {
-    maxAge: time, 
+    maxAge: time,
     path: "/",
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",

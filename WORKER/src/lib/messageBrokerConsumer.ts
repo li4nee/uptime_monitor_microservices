@@ -50,5 +50,4 @@ export class MessageBrokerConsumer {
       throw new InternalServerError("Failed to setup message broker: " + (err as Error).message);
     }
   }
-
 }

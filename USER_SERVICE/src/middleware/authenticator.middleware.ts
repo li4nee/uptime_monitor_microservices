@@ -1,4 +1,1 @@
-export function authenticate()
-{
-    
-}
+export function authenticate() {}

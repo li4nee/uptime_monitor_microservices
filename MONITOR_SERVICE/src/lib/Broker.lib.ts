@@ -80,7 +80,7 @@ export class MessageBrokerProducer {
     }
   }
 
-  async publish(message:string): Promise<void> {
+  async publish(message: string): Promise<void> {
     if (!this.channel) {
       throw new InternalServerError("Channel not created. Call createChannel() first.");
     }
@@ -91,5 +91,4 @@ export class MessageBrokerProducer {
       throw new InternalServerError("Failed to publish message: " + (err as Error).message);
     }
   }
-
 }

@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 dotenv.config();
-console.log(process.env.REDIS_URL);
 const GlobalSettings = {
   port: Number(3000),
   JWT_SECRET: process.env.JWT_SECRET || "miccheck1212miccheck1212",

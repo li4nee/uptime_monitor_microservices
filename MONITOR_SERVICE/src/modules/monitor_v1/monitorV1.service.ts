@@ -69,8 +69,7 @@ class MonitorServiceClass {
     query: GetMonitoringHisoryDto,
     userId: string,
   ): Promise<DefaultResponse> {
-    if(!userId)
-      throw new InvalidInputError("User ID is required to fetch monitoring history");
+    if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring history");
     if (!query.siteId)
       throw new InvalidInputError("Site ID is required to fetch monitoring history");
     if (!query.siteApiId)
@@ -201,7 +200,7 @@ class MonitorServiceClass {
     // });
 
     const { siteId, siteApiId, yearAndMonth, httpMethod } = query;
-    if(!userId) throw new InvalidInputError("User ID is required to fetch one month overview");
+    if (!userId) throw new InvalidInputError("User ID is required to fetch one month overview");
     if (!siteId) throw new InvalidInputError("Site ID is required");
     if (!siteApiId) throw new InvalidInputError("Site API ID is required");
     if (!yearAndMonth?.match(/^\d{4}-\d{2}$/))

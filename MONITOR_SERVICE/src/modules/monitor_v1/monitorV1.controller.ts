@@ -17,6 +17,7 @@ class MonitorControllerClass {
 
   async registerSiteMonitor(req: AuthenticatedRequest, res: Response) {
     let body: AddMonitoringRoutesDto = await AddMonitoringRoutesDtoSchema.validate(req.body);
+    console.log(req.userId);
     let result = await this.monitorService.resisterRoutesApiToMonitor(body, req.userId);
     res.status(200).json(result);
     return;
