@@ -25,6 +25,7 @@ export class SiteMonitorService {
             id: true,
             url: true,
             userId: true,
+            notification: true,
             siteApis: {
               id: true,
               body: true,
@@ -76,6 +77,7 @@ export class SiteMonitorService {
       httpMethod: siteApi.httpMethod,
       maxResponseTime: siteApi.maxResponseTime,
       priority: siteApi.priority,
+      siteNotification: site.notification,
       notification: {
         emailEnabled: siteApi.notificationSetting?.emailEnabled,
         emailAddress: siteApi.notificationSetting?.emailAddress,

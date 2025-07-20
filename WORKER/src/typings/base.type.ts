@@ -13,3 +13,11 @@ export class InternalServerError extends CustomError {
     super(message, 500);
   }
 }
+
+export interface MailOptions {
+  from: string;
+  to: string | string[];
+  subject: string;
+  text?: string;
+  html?: string;
+}

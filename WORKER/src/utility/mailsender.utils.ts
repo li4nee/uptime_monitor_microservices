@@ -1,12 +1,5 @@
 import nodemailer from "nodemailer";
-
-interface MailOptions {
-  from: string;
-  to: string | string[];
-  subject: string;
-  text?: string;
-  html?: string;
-}
+import { MailOptions } from "../typings/base.type";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.example.com",

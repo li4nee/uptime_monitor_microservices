@@ -16,6 +16,11 @@ services:
     ports:
       - "5674:5672"
       - "15674:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 5s
+      timeout: 3s
+      retries: 5  
     volumes:
       - ./rabbitmq:/var/lib/rabbitmq
   
@@ -48,6 +53,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - postgres
+      - redis
 
   monitor-service:
     build: ./MONITOR_SERVICE
@@ -56,23 +62,43 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
+      - RABBITMQ_QUEUE_EMAIL=${RABBITMQ_QUEUE_EMAIL}
+      - RABBITMQ_ROUTING_KEY_EMAIL=${RABBITMQ_ROUTING_KEY_EMAIL}
+      - RABBITMQ_QUEUE_SLACK=${RABBITMQ_QUEUE_SLACK}
+      - RABBITMQ_ROUTING_KEY_SLACK=${RABBITMQ_ROUTING_KEY_SLACK}
+      - RABBITMQ_QUEUE_DISCORD=${RABBITMQ_QUEUE_DISCORD}
+      - RABBITMQ_ROUTING_KEY_DISCORD=${RABBITMQ_ROUTING_KEY_DISCORD}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
-      - postgres
-      - rabbitmq
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+
 
   worker:
     build: ./WORKER
     environment:
       - RABBITMQ_URL=${RABBITMQ_URL}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
-      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
+      - RABBITMQ_QUEUE_EMAIL=${RABBITMQ_QUEUE_EMAIL}
+      - RABBITMQ_ROUTING_KEY_EMAIL=${RABBITMQ_ROUTING_KEY_EMAIL}
+      - RABBITMQ_QUEUE_SLACK=${RABBITMQ_QUEUE_SLACK}
+      - RABBITMQ_ROUTING_KEY_SLACK=${RABBITMQ_ROUTING_KEY_SLACK}
+      - RABBITMQ_QUEUE_DISCORD=${RABBITMQ_QUEUE_DISCORD}
+      - RABBITMQ_ROUTING_KEY_DISCORD=${RABBITMQ_ROUTING_KEY_DISCORD}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_USER=${MAIL_USER}
       - MAIL_PASS=${MAIL_PASS}
     depends_on:
-      - postgres
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      
 
 volumes:
   pgdata:

@@ -33,6 +33,7 @@ export interface SiteMoniorDTO {
   maxResponseTime?: number;
   priority: SITE_PRIORITY;
   userId: string;
+  siteNotification?: boolean;
   notification?: {
     emailEnabled?: boolean;
     emailAddress?: string;
@@ -98,4 +99,12 @@ export class DefaultResponse {
     this.message = message;
     this.data = data;
   }
+}
+
+export interface MailOptions {
+  from: string;
+  to: string | string[];
+  subject: string;
+  text?: string;
+  html?: string;
 }
