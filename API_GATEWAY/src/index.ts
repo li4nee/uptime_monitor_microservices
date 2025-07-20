@@ -1,10 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import {
-  createProxyMiddleware,
-  RequestHandler,
-  Options,
-  RequestHandler as ProxyRequestHandler,
-} from "http-proxy-middleware";
+import { createProxyMiddleware, RequestHandler, Options, RequestHandler as ProxyRequestHandler } from "http-proxy-middleware";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";

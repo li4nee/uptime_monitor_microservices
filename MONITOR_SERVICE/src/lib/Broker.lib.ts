@@ -1,6 +1,6 @@
 import * as amqp from "amqplib";
 import { GlobalSettings } from "../globalSettings";
-import { InternalServerError, MailOptions } from "../typings/base.type";
+import { discordOptions, InternalServerError, MailOptions, slackOptions } from "../typings/base.type";
 
 class MessageBrokerProducer {
   private connection?: amqp.ChannelModel;
@@ -124,7 +124,7 @@ class MessageBrokerProducer {
       throw new InternalServerError("Channel not created. Call createChannel() first.");
     }
     try {
-      const message = { channel, text };
+      const message: slackOptions = { channel, text };
       const stringifyMessage = JSON.stringify(message);
       await this.publish(stringifyMessage, this.routingKeySlack);
     } catch (err) {
@@ -137,7 +137,7 @@ class MessageBrokerProducer {
       throw new InternalServerError("Channel not created. Call createChannel() first.");
     }
     try {
-      const message = { channelId, content };
+      const message: discordOptions = { channelId, content };
       const stringifyMessage = JSON.stringify(message);
       await this.publish(stringifyMessage, this.routingKeyDiscord);
     } catch (err) {

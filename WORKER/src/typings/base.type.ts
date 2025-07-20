@@ -21,3 +21,13 @@ export interface MailOptions {
   text?: string;
   html?: string;
 }
+
+export interface SlackOptions {
+  channel: string;
+  text: string;
+}
+
+export interface DiscordOptions {
+  channelId: string;
+  content: string;
+}

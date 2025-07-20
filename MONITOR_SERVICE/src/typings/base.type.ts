@@ -108,3 +108,13 @@ export interface MailOptions {
   text?: string;
   html?: string;
 }
+
+export interface slackOptions {
+  channel: string;
+  text: string;
+}
+
+export interface discordOptions {
+  channelId: string;
+  content: string;
+}

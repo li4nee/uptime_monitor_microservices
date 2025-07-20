@@ -53,9 +53,7 @@ export class SiteMonitorService {
           if (!site.siteApis?.length) return [];
 
           return site.siteApis.map((api) =>
-            this.queueSiteApiJob(site, api).catch((err) =>
-              console.error(`Failed to queue job for siteApi ${api.id}:`, err),
-            ),
+            this.queueSiteApiJob(site, api).catch((err) => console.error(`Failed to queue job for siteApi ${api.id}:`, err)),
           );
         });
 

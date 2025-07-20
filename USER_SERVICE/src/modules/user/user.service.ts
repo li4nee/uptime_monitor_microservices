@@ -12,8 +12,7 @@ export class UserService {
   private userModel = UserModel;
 
   async signup(body: signupDto) {
-    if (body.password != body.confirmPassword)
-      throw new InvalidInputError("Password and confirm password don't match");
+    if (body.password != body.confirmPassword) throw new InvalidInputError("Password and confirm password don't match");
     let oldUser = await this.checkIfUserExistsAndReturnUser(body.email, "email");
     if (oldUser) throw new InvalidInputError("User with this mail already exists");
     const hashed = await bcrypt.hash(body.password, 10);
@@ -53,16 +52,8 @@ export class UserService {
     return user;
   }
 
-  private generateToken(
-    userId: string,
-    role: ROLE,
-    expiresIn: jwt.SignOptions["expiresIn"] = "2m",
-  ) {
-    const token = jwt.sign(
-      { userId, role, createdAt: Date.now() },
-      GlobalSettings.JWT_SECRET as string,
-      { expiresIn },
-    );
+  private generateToken(userId: string, role: ROLE, expiresIn: jwt.SignOptions["expiresIn"] = "2m") {
+    const token = jwt.sign({ userId, role, createdAt: Date.now() }, GlobalSettings.JWT_SECRET as string, { expiresIn });
     return token;
   }
 }

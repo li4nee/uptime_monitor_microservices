@@ -4,19 +4,9 @@ import { siteNotificationSetting } from "../../entity/siteNotificationSetting.en
 import { SiteModel } from "../../repo/site.repo";
 import { SiteApiModel } from "../../repo/siteApi.repo";
 import { SiteMonitoringHistoryModel } from "../../repo/siteHistory.repo";
-import {
-  DefaultResponse,
-  InvalidInputError,
-  NOTIFICATION_FREQUENCY,
-  SITE_PRIORITY,
-} from "../../typings/base.type";
+import { DefaultResponse, InvalidInputError, NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../../typings/base.type";
 import { getPaginationValues } from "../../utils/base.utils";
-import {
-  AddMonitoringRoutesDto,
-  GetMonitoringHisoryDto,
-  GetMonitoringRoutesDto,
-  GetOneMonthOverviewDto,
-} from "./monitorV1.dto";
+import { AddMonitoringRoutesDto, GetMonitoringHisoryDto, GetMonitoringRoutesDto, GetOneMonthOverviewDto } from "./monitorV1.dto";
 class MonitorServiceClass {
   constructor(
     private readonly siteModel = SiteModel,
@@ -24,16 +14,11 @@ class MonitorServiceClass {
     private readonly siteHistoryModel = SiteMonitoringHistoryModel,
   ) {}
 
-  async resisterRoutesApiToMonitor(
-    body: AddMonitoringRoutesDto,
-    userId: string,
-  ): Promise<DefaultResponse> {
+  async resisterRoutesApiToMonitor(body: AddMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to register monitoring routes");
     let existingSite = await this.checkIfTheUrlExists(body.url, userId);
     if (existingSite)
-      throw new InvalidInputError(
-        "This URL is already registered for monitoring,please edit the existing site instead of creating a new one",
-      );
+      throw new InvalidInputError("This URL is already registered for monitoring,please edit the existing site instead of creating a new one");
     let newSite = new Site();
     newSite.url = body.url;
     newSite.userId = userId;
@@ -56,8 +41,7 @@ class MonitorServiceClass {
       notificationSetting.discordWebhook = api.discordWebhook ?? "";
       notificationSetting.slackEnabled = api.slackEnabled ?? false;
       notificationSetting.slackWebhook = api.slackWebhook ?? "";
-      notificationSetting.notificationFrequency =
-        api.notificationFrequency ?? NOTIFICATION_FREQUENCY.ONCE;
+      notificationSetting.notificationFrequency = api.notificationFrequency ?? NOTIFICATION_FREQUENCY.ONCE;
       notificationSetting.lastNotificationSentAt = null;
       siteApi.notificationSetting = notificationSetting;
       return siteApi;
@@ -66,29 +50,18 @@ class MonitorServiceClass {
     return new DefaultResponse(200, "Monitoring routes registered successfully");
   }
 
-  async getMonitoringRoutes(
-    query: GetMonitoringRoutesDto,
-    userId: string,
-  ): Promise<DefaultResponse> {
+  async getMonitoringRoutes(query: GetMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring routes");
-    if (query.siteId || query.siteApiId)
-      return await this.getMonitoringRouteIdProvided(query, userId);
+    if (query.siteId || query.siteApiId) return await this.getMonitoringRouteIdProvided(query, userId);
     return await this.getMonitoringRoutesPaginated(query, userId);
   }
 
-  async getMonitoringHistory(
-    query: GetMonitoringHisoryDto,
-    userId: string,
-  ): Promise<DefaultResponse> {
+  async getMonitoringHistory(query: GetMonitoringHisoryDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring history");
-    if (!query.siteId)
-      throw new InvalidInputError("Site ID is required to fetch monitoring history");
-    if (!query.siteApiId)
-      throw new InvalidInputError("Site API ID is required to fetch monitoring history");
-    if (query.startDate && query.startDate.getTime() > Date.now())
-      throw new InvalidInputError("startDate cannot be in the future");
-    if (query.endDate && query.endDate.getTime() > Date.now())
-      throw new InvalidInputError("endDate cannot be in the future");
+    if (!query.siteId) throw new InvalidInputError("Site ID is required to fetch monitoring history");
+    if (!query.siteApiId) throw new InvalidInputError("Site API ID is required to fetch monitoring history");
+    if (query.startDate && query.startDate.getTime() > Date.now()) throw new InvalidInputError("startDate cannot be in the future");
+    if (query.endDate && query.endDate.getTime() > Date.now()) throw new InvalidInputError("endDate cannot be in the future");
     if (query.startDate && query.endDate && query.startDate.getTime() > query.endDate.getTime())
       throw new InvalidInputError("startDate cannot be after endDate");
     if (query.monitoringHistoryId) {
@@ -128,14 +101,11 @@ class MonitorServiceClass {
       .skip(skip);
     if (query.status) queryBuilder.andWhere("history.status = :status", { status: query.status });
 
-    if (query.startDate)
-      queryBuilder.andWhere("history.checkedAt >= :startDate", { startDate: query.startDate });
+    if (query.startDate) queryBuilder.andWhere("history.checkedAt >= :startDate", { startDate: query.startDate });
 
-    if (query.endDate)
-      queryBuilder.andWhere("history.checkedAt <= :endDate", { endDate: query.endDate });
+    if (query.endDate) queryBuilder.andWhere("history.checkedAt <= :endDate", { endDate: query.endDate });
 
-    if (query.httpMethod)
-      queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
+    if (query.httpMethod) queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
     const [history, total] = await queryBuilder.getManyAndCount();
     let totalPages = Math.ceil(total / limit);
     return new DefaultResponse(200, "Monitoring history fetched successfully", {
@@ -153,15 +123,12 @@ class MonitorServiceClass {
     if (!userId) throw new InvalidInputError("User ID is required to fetch one month overview");
     if (!siteId) throw new InvalidInputError("Site ID is required");
     if (!siteApiId) throw new InvalidInputError("Site API ID is required");
-    if (!yearAndMonth?.match(/^\d{4}-\d{2}$/))
-      throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
+    if (!yearAndMonth?.match(/^\d{4}-\d{2}$/)) throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
     const [year, month] = yearAndMonth.split("-").map((str) => Number(str));
-    if (month < 1 || month > 12 || isNaN(year) || isNaN(month))
-      throw new InvalidInputError("Invalid year or month");
+    if (month < 1 || month > 12 || isNaN(year) || isNaN(month)) throw new InvalidInputError("Invalid year or month");
     const startDate = new Date(year, month - 1, 1); // JavaScript months are 0-indexed tei bhara month bata ek ghatako
     const endDate = new Date(year, month, 0); // Last day of the month
-    if (startDate.getTime() > Date.now() || endDate.getTime() > Date.now())
-      throw new InvalidInputError("Dates cannot be in the future");
+    if (startDate.getTime() > Date.now() || endDate.getTime() > Date.now()) throw new InvalidInputError("Dates cannot be in the future");
     const queryBuilder = this.siteHistoryModel
       .createQueryBuilder("history")
       .innerJoin("history.siteApi", "siteApi")
@@ -193,8 +160,7 @@ class MonitorServiceClass {
         up: Number(row.up),
         down: Number(row.down),
         averageResponseTime: row.avgResponseTime ? Math.round(Number(row.avgResponseTime)) : null,
-        uptimePercentage:
-          row.total > 0 ? Math.round((Number(row.up) / Number(row.total)) * 100) : null,
+        uptimePercentage: row.total > 0 ? Math.round((Number(row.up) / Number(row.total)) * 100) : null,
       };
     });
     const daysInMonth = new Date(year, month, 0).getDate();
@@ -238,10 +204,7 @@ class MonitorServiceClass {
     });
   }
 
-  private async getMonitoringRoutesPaginated(
-    query: GetMonitoringRoutesDto,
-    userId: string,
-  ): Promise<DefaultResponse> {
+  private async getMonitoringRoutesPaginated(query: GetMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
     let { limit, skip } = getPaginationValues(query.page || 0, query.limit || 10);
     let queryBuilder = this.siteModel
       .createQueryBuilder("site")
@@ -270,20 +233,14 @@ class MonitorServiceClass {
         siteNotification: query.siteNotification,
       });
 
-    if (query.isActive)
-      queryBuilder.andWhere("site.isActive = :isActive", { isActive: query.isActive });
+    if (query.isActive) queryBuilder.andWhere("site.isActive = :isActive", { isActive: query.isActive });
 
-    if (query.priority)
-      queryBuilder.andWhere("siteApi.priority = :priority", { priority: query.priority });
+    if (query.priority) queryBuilder.andWhere("siteApi.priority = :priority", { priority: query.priority });
 
-    if (query.httpMethod)
-      queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
+    if (query.httpMethod) queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
 
     if (query.search)
-      queryBuilder.andWhere(
-        "(site.url ILIKE :search OR site.siteName ILIKE :search OR siteApi.path ILIKE :search)",
-        { search: `%${query.search}%` },
-      );
+      queryBuilder.andWhere("(site.url ILIKE :search OR site.siteName ILIKE :search OR siteApi.path ILIKE :search)", { search: `%${query.search}%` });
     const [sites, total] = await queryBuilder.getManyAndCount();
     let totalPages = Math.ceil(total / limit);
     return new DefaultResponse(200, "Monitoring routes fetched successfully", {
@@ -297,10 +254,7 @@ class MonitorServiceClass {
     });
   }
 
-  private async getMonitoringRouteIdProvided(
-    query: GetMonitoringRoutesDto,
-    userId: string,
-  ): Promise<DefaultResponse> {
+  private async getMonitoringRouteIdProvided(query: GetMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
     const { siteId, siteApiId } = query;
 
     if (siteApiId && !siteId) {
@@ -323,10 +277,7 @@ class MonitorServiceClass {
     const sitePromise = this.findSiteById(siteId, userId);
 
     if (siteApiId) {
-      const [site, siteApi] = await Promise.all([
-        sitePromise,
-        this.findSiteApi(siteApiId, siteId, userId),
-      ]);
+      const [site, siteApi] = await Promise.all([sitePromise, this.findSiteApi(siteApiId, siteId, userId)]);
 
       if (!site) throw new InvalidInputError("Site not found");
       if (!siteApi) throw new InvalidInputError("Site API not found for this site and user");

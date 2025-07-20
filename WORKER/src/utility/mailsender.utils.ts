@@ -11,22 +11,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendMail(options: MailOptions): Promise<void> {
-  await transporter.sendMail(options);
-}
+export async function sendEmail(to: string | string[], mailOptions: Omit<MailOptions, "to">): Promise<void> {
+  const recipients = Array.isArray(to) ? to : [to];
 
-export async function sendBulkMail(
-  recipients: string[],
-  mailOptions: Omit<MailOptions, "to">,
-): Promise<void> {
-  const sendPromises = recipients.map((recipient) =>
-    transporter.sendMail({ ...mailOptions, to: recipient }),
-  );
+  const sendPromises = recipients.map((recipient) => transporter.sendMail({ ...mailOptions, to: recipient }));
+
   try {
     await Promise.all(sendPromises);
-    return;
   } catch (error) {
-    console.error("Error sending bulk emails:", error);
+    console.error("Error sending email(s):", error);
     return;
   }
 }

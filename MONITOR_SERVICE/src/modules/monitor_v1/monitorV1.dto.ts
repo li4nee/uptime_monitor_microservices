@@ -39,10 +39,7 @@ export const AddMonitoringRoutesDtoSchema = yup.object().shape({
         maxNumberOfAttempts: yup.number().default(3),
         priority: yup.number().oneOf([1, 2, 3, 4]).default(SITE_PRIORITY.MEDIUM),
         notification: yup.boolean().default(true),
-        notificationFrequency: yup
-          .string()
-          .oneOf(Object.values(NOTIFICATION_FREQUENCY))
-          .default(NOTIFICATION_FREQUENCY.ONCE),
+        notificationFrequency: yup.string().oneOf(Object.values(NOTIFICATION_FREQUENCY)).default(NOTIFICATION_FREQUENCY.ONCE),
         isActive: yup.boolean().default(true),
       }),
     )

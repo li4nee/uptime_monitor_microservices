@@ -15,9 +15,7 @@ export function GlobalErrorHandler(err: Error, req: Request, res: Response, next
     res.status(statusCode).json({ message: err.message, status: statusCode, path: req.url });
     return;
   } else {
-    res
-      .status(500)
-      .json({ message: "Opps some unexpected error occured", status: 500, path: req.url });
+    res.status(500).json({ message: "Opps some unexpected error occured", status: 500, path: req.url });
     return;
   }
 }
@@ -32,18 +30,13 @@ export const generateId = (length: number = 20): string => {
   return result;
 };
 
-export const Wrapper = (
-  fn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<any>,
-) => {
+export const Wrapper = (fn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req as AuthenticatedRequest, res, next)).catch(next);
   };
 };
 
-export function getPaginationValues(
-  page: number,
-  limit: number,
-): { page: number; limit: number; skip: number } {
+export function getPaginationValues(page: number, limit: number): { page: number; limit: number; skip: number } {
   page = Math.max(0, page);
   limit = Math.min(Math.max(1, limit), 20);
   const skip = page * limit;

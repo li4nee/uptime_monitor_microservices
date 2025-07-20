@@ -16,8 +16,7 @@ const GlobalSettings = {
     queueDiscord: process.env.RABBITMQ_QUEUE_DISCORD || "uptime_monitor_queue_discord",
     routingKeyEmail: process.env.RABBITMQ_ROUTING_KEY_EMAIL || "uptime_monitor_routing_key_email",
     routingKeySlack: process.env.RABBITMQ_ROUTING_KEY_SLACK || "uptime_monitor_routing_key_slack",
-    routingKeyDiscord:
-      process.env.RABBITMQ_ROUTING_KEY_DISCORD || "uptime_monitor_routing_key_discord",
+    routingKeyDiscord: process.env.RABBITMQ_ROUTING_KEY_DISCORD || "uptime_monitor_routing_key_discord",
   },
   mail: {
     host: process.env.MAIL_HOST || "smtp.example.com",
