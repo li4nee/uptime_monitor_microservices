@@ -19,7 +19,4 @@ export class User extends BaseEntity {
 
   @Column({ default: false })
   emailVerified!: boolean;
-
-  @Column({ default: true })
-  notification!: boolean;
 }

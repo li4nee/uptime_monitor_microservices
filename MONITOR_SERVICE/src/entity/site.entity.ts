@@ -8,7 +8,10 @@ import { SiteApi } from "./siteApi.entity";
  * @property {string} url - The URL of the site.
  * @property {string} userId - The ID of the user who owns this site.
  * @property {boolean} notification - Whether notifications are enabled for this site.
+ * If it's disabled no notification will be sent for any api endpoint of this site.It's like a global switch.
  * @property {SiteApi[]} siteApis - The APIs associated with this site.
+ * @property {string} siteName - The name of the site.
+ * @property {boolean} isActive - Indicates whether the site is currently active for monitoring.
  */
 
 @Entity()
@@ -23,12 +26,12 @@ export class Site extends GlobalEntity {
   @Column()
   userId!: string;
 
-  @Column({ default: true })
-  notification!: boolean;
-
   @Column()
   siteName!: string;
 
   @Column({ default: true })
   isActive!: boolean;
+
+  @Column({ default: true })
+  notification!: boolean;
 }

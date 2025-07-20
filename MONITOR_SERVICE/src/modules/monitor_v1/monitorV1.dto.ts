@@ -2,7 +2,7 @@ import * as yup from "yup";
 import { HTTP_METHOD, NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../../typings/base.type";
 export interface AddMonitoringRoutesDto {
   url: string;
-  notification?: boolean;
+  siteNotification?: boolean;
   siteApis: {
     path: string;
     httpMethod: HTTP_METHOD;
@@ -11,9 +11,14 @@ export interface AddMonitoringRoutesDto {
     maxResponseTime?: number;
     maxNumberOfAttempts?: number;
     priority?: SITE_PRIORITY;
-    notification?: boolean;
-    notificationFrequency?: NOTIFICATION_FREQUENCY;
     isActive?: boolean;
+    emailEnabled?: boolean;
+    emailAddress?: string;
+    discordEnabled?: boolean;
+    discordWebhook?: string;
+    slackEnabled?: boolean;
+    slackWebhook?: string;
+    notificationFrequency?: NOTIFICATION_FREQUENCY;
   }[];
   siteName?: string;
   isActive?: boolean;
@@ -21,7 +26,7 @@ export interface AddMonitoringRoutesDto {
 
 export const AddMonitoringRoutesDtoSchema = yup.object().shape({
   url: yup.string().url().required(),
-  notification: yup.boolean().default(true),
+  siteNotification: yup.boolean().default(true),
   siteApis: yup
     .array()
     .of(
@@ -50,7 +55,7 @@ export interface GetMonitoringRoutesDto {
   isActive?: boolean;
   priority?: SITE_PRIORITY;
   httpMethod?: HTTP_METHOD;
-  notification?: boolean;
+  siteNotification?: boolean;
   page: number;
   limit: number;
   order?: "ASC" | "DESC";
@@ -61,9 +66,8 @@ export interface GetMonitoringRoutesDto {
 }
 
 export const GetMonitoringRoutesDtoSchema = yup.object().shape({
-  isActive: yup.boolean().default(true),
-  priority: yup.number().oneOf([1, 2, 3, 4]).default(SITE_PRIORITY.MEDIUM),
-  notification: yup.boolean().default(true),
+  isActive: yup.boolean().optional(),
+  priority: yup.number().oneOf([1, 2, 3, 4]).optional(),
   page: yup.number().default(0).min(0),
   limit: yup.number().default(10).min(1).max(20),
   order: yup.string().oneOf(["ASC", "DESC"]).default("DESC"),

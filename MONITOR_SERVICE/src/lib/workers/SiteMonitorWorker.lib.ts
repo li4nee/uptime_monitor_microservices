@@ -4,7 +4,6 @@ import axios, { AxiosRequestConfig } from "axios";
 import { SiteMonitoringHistory } from "../../entity/siteMonitoringHistory.entity";
 import { SiteHistorySavingQueue } from "../queue/saveHistoryToDb.queue";
 export class SiteMonitorWorker {
-  constructor() {}
   async processJob(jobData: Job<SiteMoniorDTO>): Promise<void> {
     let axiosConfig: AxiosRequestConfig = {
       url: jobData.data.url,

@@ -61,6 +61,13 @@
   dependencies:
     undici-types "~7.8.0"
 
+"@types/nodemailer@^6.4.17":
+  version "6.4.17"
+  resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-6.4.17.tgz#5c82a42aee16a3dd6ea31446a1bd6a447f1ac1a4"
+  integrity sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==
+  dependencies:
+    "@types/node" "*"
+
 "@types/strip-bom@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@types/strip-bom/-/strip-bom-3.0.0.tgz#14a8ec3956c2e81edb7520790aecf21c290aebd2"
@@ -438,6 +445,11 @@ mkdirp@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+
+nodemailer@^7.0.5:
+  version "7.0.5"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-7.0.5.tgz#3fa6607cab42401e4bedac9297e0aaa9ff84544b"
+  integrity sha512-nsrh2lO3j4GkLLXoeEksAMgAOqxOv6QumNRVQTJwKH4nuiww6iC2y7GyANs9kRAxCexg3+lTWM3PZ91iLlVjfg==
 
 normalize-path@^3.0.0, normalize-path@~3.0.0:
   version "3.0.0"

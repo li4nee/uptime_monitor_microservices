@@ -5,48 +5,65 @@ import { SiteMoniorDTO } from "../typings/base.type";
 import { SiteMonitorQueue } from "./queue/sitemonitor.queue";
 
 export class SiteMonitorService {
+  private readonly BatchSize = 100;
   constructor(
     private readonly siteModel = SiteModel,
     private readonly siteMonitorQueue = SiteMonitorQueue,
   ) {}
 
   async monitorTheSites(): Promise<void> {
-    const sites = await this.siteModel.find({
-      where: { trash: false, siteApis: { isActive: true } },
-      relations: { siteApis: true },
-      select: {
-        id: true,
-        url: true,
-        userId: true,
-        siteApis: {
-          id: true,
-          body: true,
-          headers: true,
-          httpMethod: true,
-          maxResponseTime: true,
-          priority: true,
-          notification: true,
-          notificationFrequency: true,
-          lastNotificationSentAt: true,
-        },
-      },
-    });
+    let page = 0;
+    try {
+      while (true) {
+        const sites = await this.siteModel.find({
+          where: { trash: false, siteApis: { isActive: true } },
+          relations: { siteApis: { notificationSetting: true } },
+          take: this.BatchSize,
+          skip: page * this.BatchSize,
+          order: { createdAt: "ASC" },
+          select: {
+            id: true,
+            url: true,
+            userId: true,
+            siteApis: {
+              id: true,
+              body: true,
+              headers: true,
+              httpMethod: true,
+              maxResponseTime: true,
+              notificationSetting: {
+                emailEnabled: true,
+                emailAddress: true,
+                discordEnabled: true,
+                discordWebhook: true,
+                slackEnabled: true,
+                slackWebhook: true,
+                notificationFrequency: true,
+                lastNotificationSentAt: true,
+              },
+              priority: true,
+            },
+          },
+        });
 
-    if (!sites?.length) {
-      return;
+        if (!sites?.length) break;
+
+        const allJobPromises = sites.flatMap((site) => {
+          if (!site.siteApis?.length) return [];
+
+          return site.siteApis.map((api) =>
+            this.queueSiteApiJob(site, api).catch((err) =>
+              console.error(`Failed to queue job for siteApi ${api.id}:`, err),
+            ),
+          );
+        });
+
+        await Promise.all(allJobPromises);
+        page++;
+      }
+    } catch (error) {
+      console.error("Error monitoring sites:", error);
     }
-
-    const allJobPromises = sites.flatMap((site) => {
-      if (!site.siteApis?.length) return [];
-
-      return site.siteApis.map((api) =>
-        this.queueSiteApiJob(site, api).catch((err) =>
-          console.error(`Failed to queue job for siteApi ${api.id}:`, err),
-        ),
-      );
-    });
-
-    await Promise.all(allJobPromises);
   }
 
   private async queueSiteApiJob(site: Site, siteApi: SiteApi): Promise<void> {
@@ -59,9 +76,16 @@ export class SiteMonitorService {
       httpMethod: siteApi.httpMethod,
       maxResponseTime: siteApi.maxResponseTime,
       priority: siteApi.priority,
-      notification: siteApi.notification,
-      notificationFrequency: siteApi.notificationFrequency,
-      lastSentNotificationAt: siteApi.lastNotificationSentAt,
+      notification: {
+        emailEnabled: siteApi.notificationSetting?.emailEnabled,
+        emailAddress: siteApi.notificationSetting?.emailAddress,
+        discordEnabled: siteApi.notificationSetting?.discordEnabled,
+        discordWebhook: siteApi.notificationSetting?.discordWebhook,
+        slackEnabled: siteApi.notificationSetting?.slackEnabled,
+        slackWebhook: siteApi.notificationSetting?.slackWebhook,
+        notificationFrequency: siteApi.notificationSetting?.notificationFrequency,
+        lastSentNotificationAt: siteApi.notificationSetting?.lastNotificationSentAt,
+      },
       userId: site.userId,
     };
     this.siteMonitorQueue

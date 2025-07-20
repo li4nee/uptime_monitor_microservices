@@ -1,5 +1,6 @@
 import { Site } from "../../entity/site.entity";
 import { SiteApi } from "../../entity/siteApi.entity";
+import { siteNotificationSetting } from "../../entity/siteNotificationSetting.entity";
 import { SiteModel } from "../../repo/site.repo";
 import { SiteApiModel } from "../../repo/siteApi.repo";
 import { SiteMonitoringHistoryModel } from "../../repo/siteHistory.repo";
@@ -36,8 +37,8 @@ class MonitorServiceClass {
     let newSite = new Site();
     newSite.url = body.url;
     newSite.userId = userId;
-    newSite.notification = body.notification ?? true;
     newSite.siteName = body.siteName ?? "";
+    newSite.notification = body.siteNotification ?? true;
     newSite.siteApis = body.siteApis?.map((api) => {
       let siteApi = new SiteApi();
       siteApi.path = api.path;
@@ -47,8 +48,18 @@ class MonitorServiceClass {
       siteApi.maxResponseTime = api.maxResponseTime ?? 5000;
       siteApi.maxNumberOfAttempts = api.maxNumberOfAttempts ?? 3;
       siteApi.priority = api.priority ?? SITE_PRIORITY.MEDIUM;
-      siteApi.notification = api.notification ?? true;
-      siteApi.notificationFrequency = api.notificationFrequency ?? NOTIFICATION_FREQUENCY.ONCE;
+      siteApi.isActive = api.isActive ?? true;
+      const notificationSetting = new siteNotificationSetting();
+      notificationSetting.emailEnabled = api.emailEnabled ?? true;
+      notificationSetting.emailAddress = api.emailAddress ?? "";
+      notificationSetting.discordEnabled = api.discordEnabled ?? false;
+      notificationSetting.discordWebhook = api.discordWebhook ?? "";
+      notificationSetting.slackEnabled = api.slackEnabled ?? false;
+      notificationSetting.slackWebhook = api.slackWebhook ?? "";
+      notificationSetting.notificationFrequency =
+        api.notificationFrequency ?? NOTIFICATION_FREQUENCY.ONCE;
+      notificationSetting.lastNotificationSentAt = null;
+      siteApi.notificationSetting = notificationSetting;
       return siteApi;
     });
     await this.siteModel.save(newSite);
@@ -138,67 +149,6 @@ class MonitorServiceClass {
   }
 
   async getOneMonthOverview(query: GetOneMonthOverviewDto, userId: string) {
-    // if (!query.siteId)
-    //   throw new InvalidInputError("Site ID is required to fetch one month overview");
-    // if (!query.siteApiId)
-    //   throw new InvalidInputError("Site API ID is required to fetch one month overview");
-    // let yearAndMonth = query.yearAndMonth;
-    // let year = parseInt(yearAndMonth.split("-")[0]);
-    // let month = parseInt(yearAndMonth.split("-")[1]) - 1; // JavaScript months are 0-indexed
-    // if (isNaN(year) || isNaN(month) || month < 0 || month > 11) {
-    //   throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
-    // }
-    // let startDate = new Date(year, month, 1);
-    // let endDate = new Date(year, month + 1, 0);
-    // if (startDate.getTime() > Date.now() || endDate.getTime() > Date.now()) {
-    //   throw new InvalidInputError("Dates cannot be in the future");
-    // }
-    // let queryBuilder = this.siteHistoryModel
-    //   .createQueryBuilder("history")
-    //   .leftJoin("history.siteApi", "siteApi")
-    //   .leftJoin("siteApi.site", "site")
-    //   .where("site.id = :siteId", { siteId: query.siteId })
-    //   .andWhere("siteApi.id = :siteApiId", { siteApiId: query.siteApiId })
-    //   .select([
-    //     "history.status as status",
-    //     "history.responseTime as responseTime",
-    //     "history.checkedAt as checkedAt",
-    //     "siteApi.httpMethod as httpMethod",
-    //   ])
-    //   .andWhere("history.checkedAt >= :startDate", { startDate })
-    //   .andWhere("history.checkedAt <= :endDate", { endDate })
-    //   .orderBy("history.checkedAt", "ASC");
-    // if (query.httpMethod) {
-    //   queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
-    // }
-    // const results = await queryBuilder.getRawMany();
-    // if (results.length === 0) {
-    //   return new DefaultResponse(200, "No data found for the specified month", {
-    //     overview: [],
-    //     pagination: null,
-    //   });
-    // }
-    // let overview = results.map((result) => ({
-    //   status: result.status,
-    //   responseTime: result.responseTime,
-    //   checkedAt: new Date(result.checkedAt),
-    //   httpMethod: result.httpMethod,
-    // }));
-    // let totalResponseTime = overview.reduce((sum, item) => sum + item.responseTime, 0);
-    // let averageResponseTime = totalResponseTime / overview.length;
-    // let upCount = overview.filter(item => item.status === "UP").length;
-    // let downCount = overview.filter(item => item.status === "DOWN").length;
-    // return new DefaultResponse(200, "One month overview fetched successfully", {
-    //   overview: {
-    //     averageResponseTime,
-    //     upCount,
-    //     downCount,
-    //     totalResponseTime,
-    //     details: overview,
-    //   },
-    //   pagination: null,
-    // });
-
     const { siteId, siteApiId, yearAndMonth, httpMethod } = query;
     if (!userId) throw new InvalidInputError("User ID is required to fetch one month overview");
     if (!siteId) throw new InvalidInputError("Site ID is required");
@@ -300,10 +250,10 @@ class MonitorServiceClass {
       .select([
         "site.id",
         "site.url",
-        "site.notification",
         "site.siteName",
         "site.isActive",
         "site.createdAt",
+        "site.notification",
         "siteApi.id",
         "siteApi.path",
         "siteApi.httpMethod",
@@ -314,6 +264,11 @@ class MonitorServiceClass {
       .take(limit)
       .skip(skip)
       .orderBy(`site.${query.orderBy ?? "createdAt"}`, query.order ?? "DESC");
+
+    if (query.siteNotification)
+      queryBuilder.andWhere("site.notification = :siteNotification", {
+        siteNotification: query.siteNotification,
+      });
 
     if (query.isActive)
       queryBuilder.andWhere("site.isActive = :isActive", { isActive: query.isActive });
@@ -333,8 +288,12 @@ class MonitorServiceClass {
     let totalPages = Math.ceil(total / limit);
     return new DefaultResponse(200, "Monitoring routes fetched successfully", {
       sites,
-      total,
-      totalPages,
+      pagination: {
+        total,
+        page: query.page || 0,
+        limit: limit,
+        totalPages: totalPages,
+      },
     });
   }
 
@@ -413,10 +372,10 @@ class MonitorServiceClass {
       select: {
         id: true,
         url: true,
-        notification: true,
         siteName: true,
         isActive: true,
         createdAt: true,
+        notification: true,
       },
     });
   }
@@ -457,7 +416,6 @@ class MonitorServiceClass {
       id: true,
       path: true,
       httpMethod: true,
-      notification: true,
       isActive: true,
       priority: true,
     };

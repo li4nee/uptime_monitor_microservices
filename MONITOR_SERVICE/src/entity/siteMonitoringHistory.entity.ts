@@ -20,6 +20,13 @@ import { SiteApi } from "./siteApi.entity";
  * @property {Record<string, string>} headers - The HTTP headers sent with the request.
  * * Note: The `headers` and `body` properties are optional and can be null.
  * @property {Record<string, any>} body - The body of the request sent during the check.
+ * * @property {number} attemptNumber - The number of attempts made to check the site.
+ * @property {boolean} wasNotificationSent - Indicates if a notification was sent for this check
+ * * @property {Object} notificationSentTo - Contains information about where notifications were sent,
+ * such as email, Discord, or Slack.
+ * * @property {string} notificationSentTo.email - Email address where the notification was sent
+ * * @property {string} notificationSentTo.discord - Discord channel where the notification was sent
+ * * @property {string} notificationSentTo.slack - Slack channel where the notification was
  */
 @Entity()
 export class SiteMonitoringHistory extends GlobalEntity {
@@ -59,4 +66,7 @@ export class SiteMonitoringHistory extends GlobalEntity {
 
   @Column({ default: false })
   wasNotificationSent!: boolean;
+
+  @Column({ type: "json", nullable: true })
+  notificationSentTo?: { email?: string; discord?: string; slack?: string };
 }

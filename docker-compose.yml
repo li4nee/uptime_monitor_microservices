@@ -64,8 +64,12 @@ services:
   worker:
     build: ./WORKER
     environment:
-      - DATABASE_URL=${DATABASE_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
     depends_on:
       - postgres
       - rabbitmq

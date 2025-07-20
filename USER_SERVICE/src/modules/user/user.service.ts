@@ -20,7 +20,6 @@ export class UserService {
     let user = new User();
     user.email = body.email;
     user.password = hashed;
-    user.notification = true;
     user.emailVerified = false;
     await this.userModel.save(user);
 

@@ -32,10 +32,17 @@ export interface SiteMoniorDTO {
   httpMethod: HTTP_METHOD;
   maxResponseTime?: number;
   priority: SITE_PRIORITY;
-  notification: boolean;
-  notificationFrequency: NOTIFICATION_FREQUENCY;
-  lastSentNotificationAt?: Date | null;
   userId: string;
+  notification?: {
+    emailEnabled?: boolean;
+    emailAddress?: string;
+    discordEnabled?: boolean;
+    discordWebhook?: string;
+    slackEnabled?: boolean;
+    slackWebhook?: string;
+    notificationFrequency?: NOTIFICATION_FREQUENCY;
+    lastSentNotificationAt?: Date | null;
+  };
 }
 
 export class CustomError {
