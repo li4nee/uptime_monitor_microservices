@@ -25,3 +25,29 @@ export const signupValidationSchema = loginValidationSchema
       .required(),
   })
   .noUnknown();
+
+export interface changePasswordDto {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export const changePasswordValidationSchema = yup
+  .object()
+  .shape({
+    oldPassword: yup.string().min(8).required(),
+    newPassword: yup.string().min(8).required(),
+  })
+  .noUnknown();
+
+export interface changeEmailDto {
+  newEmail: string;
+  password: string;
+}
+
+export const changeEmailValidationSchema = yup
+  .object()
+  .shape({
+    newEmail: yup.string().email().required(),
+    password: yup.string().min(8).required(),
+  })
+  .noUnknown();

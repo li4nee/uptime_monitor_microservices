@@ -4,7 +4,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { AppDataSource } from "./db.config";
 import { GlobalErrorHandler } from "./utility/base.utility";
-import { authRouter } from "./modules/user/user.routes";
+import { authRouter } from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -15,9 +15,15 @@ app.use(express.json());
 // Routes
 app.use("/auth", authRouter);
 
-// app.post('/login', UserController.login)
-
 app.use(GlobalErrorHandler);
+
+// THIS IS TEMPORARY HAVE TO UPGRADE THIS
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    message: "User Service is running",
+    status: 200,
+  });
+});
 
 app.listen(GlobalSettings.port, () => {
   console.log(`User Service listening on port ${GlobalSettings.port}`);

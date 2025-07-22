@@ -1,0 +1,56 @@
+import { Request, Response } from "express";
+import { changeEmailValidationSchema, changePasswordValidationSchema, loginDto, loginValidationSchema, signupDto, signupValidationSchema } from "./auth.dto";
+import { AuthService } from "./auth.service";
+import { removeCookie, setCookie } from "../../utility/base.utility";
+import { AuthenticatedRequest } from "../../typings/base.typings";
+
+class AuthControllerClass {
+  private userService = new AuthService();
+
+  async signup(req: Request, res: Response) {
+    let data: signupDto = await signupValidationSchema.validate(req.body);
+    let message = await this.userService.signup(data);
+    res.status(201).json(message);
+    return;
+  }
+
+  async login(req: Request, res: Response) {
+    let data: loginDto = await loginValidationSchema.validate(req.body);
+    let result = await this.userService.login(data);
+    setCookie(res, "refreshToken", result.data.refreshToken, 60 * 60 * 24 * 7 * 1000);
+    setCookie(res, "accessToken", result.data.accessToken, 60 * 10 * 1000);
+    res.status(200).json(result);
+    return;
+  }
+
+  async logout(req: AuthenticatedRequest, res: Response) {
+    let message = await this.userService.logout(req.userId, req.refreshToken);
+    removeCookie(res, "accessToken");
+    removeCookie(res, "refreshToken");
+    res.status(200).json(message);
+    return;
+  }
+
+  async getUser(req: AuthenticatedRequest, res: Response) {
+    let result = await this.userService.getUser(req.userId);
+    res.status(200).json(result);
+    return;
+  }
+
+  async changePassword(req: AuthenticatedRequest, res: Response) {
+    let body = await changePasswordValidationSchema.validate(req.body);
+    let message = await this.userService.changePassword(body, req.userId);
+    res.status(200).json(message);
+    return;
+  }
+
+  async changeEmail(req: AuthenticatedRequest, res: Response) {
+   let body = await changeEmailValidationSchema.validate(req.body);
+    let message = await this.userService.changeEmail(body, req.userId);
+    res.status(200).json(message);
+    return;
+  }
+  
+}
+
+export const AuthController = new AuthControllerClass();

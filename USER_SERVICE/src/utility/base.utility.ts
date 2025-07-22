@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import * as yup from "yup";
-import { CustomError } from "../typings/base.typings";
+import { AuthenticatedRequest, CustomError } from "../typings/base.typings";
 
 export async function validateDTO(DTO: yup.AnySchema, data: any) {
   await DTO.validate(data, { abortEarly: false });
 }
 
-export const Wrapper = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
+export const Wrapper = (fn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+    Promise.resolve(fn(req as AuthenticatedRequest, res, next)).catch(next);
   };
 };
 
