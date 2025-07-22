@@ -53,10 +53,11 @@ export class AuthService {
     if (!userId) throw new InvalidInputError("No user ID provided");
     const user = await this.userModel.findOne({ where: { id: userId } });
     if (!user) throw new InvalidInputError("User not found");
-    return user;
+    const { password, ...userWithoutPassword } = user;
+    return new DefaultResponse(200, "User retrieved successfully", { user: userWithoutPassword });
   }
 
-  async changePassword(body:changePasswordDto,userId:string) {
+  async changePassword(body: changePasswordDto, userId: string) {
     if (!userId) throw new InvalidInputError("No user ID provided");
     let user = await this.checkIfUserExistsAndReturnUser(userId, "id");
     if (!user) throw new InvalidInputError("User not found");
@@ -68,7 +69,7 @@ export class AuthService {
     return new DefaultResponse(200, "Password changed successfully");
   }
 
-  async changeEmail(body:changeEmailDto, userId: string) {
+  async changeEmail(body: changeEmailDto, userId: string) {
     if (!userId) throw new InvalidInputError("No user ID provided");
     let user = await this.checkIfUserExistsAndReturnUser(userId, "id");
     if (!user) throw new InvalidInputError("User not found");
@@ -82,10 +83,10 @@ export class AuthService {
   }
 
   private async checkIfUserExistsAndReturnUser(data: string, type: "email" | "id") {
-    const whereClause = type === "email" ? { email: data} : { id: data };
+    const whereClause = type === "email" ? { email: data } : { id: data };
     const user = await this.userModel.findOne({
       where: whereClause,
-      select: { id: true, password: true ,email:true},
+      select: { id: true, password: true, email: true },
     });
     return user;
   }

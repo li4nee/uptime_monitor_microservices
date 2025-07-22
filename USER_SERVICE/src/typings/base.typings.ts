@@ -50,3 +50,11 @@ export class DefaultResponse {
     this.data = data;
   }
 }
+
+export interface MailOptions {
+  from: string;
+  to: string | string[];
+  subject: string;
+  text?: string;
+  html?: string;
+}

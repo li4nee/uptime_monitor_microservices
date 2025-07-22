@@ -1,5 +1,12 @@
 import { Request, Response } from "express";
-import { changeEmailValidationSchema, changePasswordValidationSchema, loginDto, loginValidationSchema, signupDto, signupValidationSchema } from "./auth.dto";
+import {
+  changeEmailValidationSchema,
+  changePasswordValidationSchema,
+  loginDto,
+  loginValidationSchema,
+  signupDto,
+  signupValidationSchema,
+} from "./auth.dto";
 import { AuthService } from "./auth.service";
 import { removeCookie, setCookie } from "../../utility/base.utility";
 import { AuthenticatedRequest } from "../../typings/base.typings";
@@ -45,12 +52,11 @@ class AuthControllerClass {
   }
 
   async changeEmail(req: AuthenticatedRequest, res: Response) {
-   let body = await changeEmailValidationSchema.validate(req.body);
+    let body = await changeEmailValidationSchema.validate(req.body);
     let message = await this.userService.changeEmail(body, req.userId);
     res.status(200).json(message);
     return;
   }
-  
 }
 
 export const AuthController = new AuthControllerClass();

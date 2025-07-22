@@ -11,6 +11,7 @@
     "start:dev": "ts-node-dev --respawn --transpile-only --project tsconfig.json src/index.ts"
   },
   "dependencies": {
+    "amqplib": "^0.10.8",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
@@ -22,6 +23,7 @@
     "yup": "^1.6.1"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.7",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
