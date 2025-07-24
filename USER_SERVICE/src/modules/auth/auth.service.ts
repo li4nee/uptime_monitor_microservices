@@ -7,9 +7,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { GlobalSettings } from "../../globalSettings";
 import { LoginStore } from "../../utility/login.utility";
+import { getBrokerInstance } from "../../lib/Broker.lib";
+import { generateOtp } from "../../utility/base.utility";
 
 export class AuthService {
   private userModel = UserModel;
+  private broker = getBrokerInstance();
 
   async signup(body: signupDto) {
     if (body.password != body.confirmPassword) throw new InvalidInputError("Password and confirm password don't match");
@@ -21,9 +24,14 @@ export class AuthService {
     user.password = hashed;
     user.emailVerified = false;
     await this.userModel.save(user);
-
-    // call the broker to send email verification
-
+    let OTP = generateOtp();
+    const mailData = {
+      to: body.email,
+      from: GlobalSettings.mail.from,
+      subject: "Email Verification",
+      text: `Your OTP for email verification is ${OTP}`,
+    };
+    await Promise.all([LoginStore.setOtpToken(user.id, OTP, 60 * 5 * 1000), this.broker.sendEmail(mailData)]);
     return new DefaultResponse(201, "User created successfully, please verify your email");
   }
 
@@ -80,6 +88,19 @@ export class AuthService {
     user.email = body.newEmail;
     await this.userModel.save(user);
     return new DefaultResponse(200, "Email changed successfully");
+  }
+
+  async verifyEmail(userId: string, otp: string) {
+    if (!userId) throw new InvalidInputError("No user ID provided");
+    if (!otp) throw new InvalidInputError("No OTP provided");
+    const isOtpValid = await LoginStore.verifyOtpToken(userId, otp);
+    if (!isOtpValid) throw new InvalidInputError("Invalid or expired OTP");
+    let user = await this.userModel.findOne({ where: { id: userId }, select: { id: true, emailVerified: true } });
+    if (!user) throw new InvalidInputError("User not found");
+    user.emailVerified = true;
+    await this.userModel.save(user);
+    await LoginStore.removeOtpToken(userId, otp);
+    return new DefaultResponse(200, "Email verified successfully");
   }
 
   private async checkIfUserExistsAndReturnUser(data: string, type: "email" | "id") {

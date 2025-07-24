@@ -73,6 +73,24 @@ class LoginGlobalStore {
   setuserToken = async (token: string, userId: string, time: number) => {
     await this.setToken(this.login_hash, userId, token, time);
   };
+
+  setOtpToken = async (token: string, userId: string, time: number) => {
+    await this.removeOtpToken(userId, token);
+    await this.setToken("otp_store", userId, token, time);
+  };
+
+  verifyOtpToken = async (userId: string, otp: string) => {
+    if (!otp) throw new PermissionNotGranted("OTP not found");
+    const { found, tokens } = await this.getToken("otp_store", userId);
+    if (!found || !tokens?.includes(otp)) {
+      throw new PermissionNotGranted("OTP expired or invalid");
+    }
+    return true;
+  };
+
+  removeOtpToken = async (userId: string, token: string) => {
+    return await this.removeToken("otp_store", userId, token);
+  };
 }
 
 export const LoginStore = new LoginGlobalStore();

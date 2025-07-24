@@ -6,10 +6,12 @@ import {
   loginValidationSchema,
   signupDto,
   signupValidationSchema,
+  verifyEmailDto,
+  verifyEmailValidationSchema,
 } from "./auth.dto";
 import { AuthService } from "./auth.service";
 import { removeCookie, setCookie } from "../../utility/base.utility";
-import { AuthenticatedRequest } from "../../typings/base.typings";
+import { AuthenticatedRequest, InvalidInputError } from "../../typings/base.typings";
 
 class AuthControllerClass {
   private userService = new AuthService();
@@ -55,6 +57,14 @@ class AuthControllerClass {
     let body = await changeEmailValidationSchema.validate(req.body);
     let message = await this.userService.changeEmail(body, req.userId);
     res.status(200).json(message);
+    return;
+  }
+
+  // HAVE TO ADD RATE LIMIT HERE
+  async verifyEmail(req: Request, res: Response) {
+    let body : verifyEmailDto = await verifyEmailValidationSchema.validate(req.body);
+    let result = await this.userService.verifyEmail(body.userId, body.otp);
+    res.status(200).json(result);
     return;
   }
 }

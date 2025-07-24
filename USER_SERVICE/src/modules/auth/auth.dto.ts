@@ -50,4 +50,17 @@ export const changeEmailValidationSchema = yup
     newEmail: yup.string().email().required(),
     password: yup.string().min(8).required(),
   })
+  .noUnknown()
+
+export interface verifyEmailDto {
+  otp: string;
+  userId: string;
+}
+
+export const verifyEmailValidationSchema = yup
+  .object()
+  .shape({
+    otp: yup.string().length(6, "OTP must be 6 digits long").required(),
+    userId: yup.string().required(),
+  })
   .noUnknown();

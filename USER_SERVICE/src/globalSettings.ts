@@ -18,6 +18,9 @@ const GlobalSettings = {
     queueEmail: process.env.RABBITMQ_QUEUE_EMAIL || "uptime_monitor_queue_email",
     routingKeyEmail: process.env.RABBITMQ_ROUTING_KEY_EMAIL || "uptime_monitor_routing_key_email",
   },
+  mail: {
+    from: process.env.MAIL_USER || "random@gmail.com",
+  },
 };
 
 export { GlobalSettings };

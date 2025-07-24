@@ -1,5 +1,5 @@
 export const emailVerificationOtpMailTemplate = (name: string, otp: string): string => {
-    return `
+  return `
         <html>
             <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0;">
                 <div style="max-width: 480px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 32px;">
@@ -22,4 +22,4 @@ export const emailVerificationOtpMailTemplate = (name: string, otp: string): str
             </body>
         </html>
     `;
-}
+};
