@@ -15,6 +15,12 @@ app.use(express.json());
 
 app.use("/v1", attachProxiedUser, monitorV1Router);
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    message: "Monitor Service is running",
+    status: 200,
+  });
+});
 app.use(GlobalErrorHandler);
 app.listen(GlobalSettings.port, () => {
   console.log(`Monitor Service listening on port ${GlobalSettings.port}`);

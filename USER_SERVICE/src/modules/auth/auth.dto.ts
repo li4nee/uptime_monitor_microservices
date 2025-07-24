@@ -50,7 +50,7 @@ export const changeEmailValidationSchema = yup
     newEmail: yup.string().email().required(),
     password: yup.string().min(8).required(),
   })
-  .noUnknown()
+  .noUnknown();
 
 export interface verifyEmailDto {
   otp: string;

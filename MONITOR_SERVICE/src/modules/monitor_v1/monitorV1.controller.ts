@@ -8,6 +8,8 @@ import {
   GetMonitoringRoutesDtoSchema,
   GetOneMonthOverviewDto,
   GetOneMonthOverviewDtoSchema,
+  UpdateMonitoringRoutesDto,
+  UpdateMonitoringRoutesDtoSchema,
 } from "./monitorV1.dto";
 
 import { Response } from "express";
@@ -17,7 +19,6 @@ class MonitorControllerClass {
 
   async registerSiteMonitor(req: AuthenticatedRequest, res: Response) {
     let body: AddMonitoringRoutesDto = await AddMonitoringRoutesDtoSchema.validate(req.body);
-    console.log(req.userId);
     let result = await this.monitorService.resisterRoutesApiToMonitor(body, req.userId);
     res.status(200).json(result);
     return;
@@ -26,6 +27,13 @@ class MonitorControllerClass {
   async getRoutes(req: AuthenticatedRequest, res: Response) {
     let body: GetMonitoringRoutesDto = await GetMonitoringRoutesDtoSchema.validate(req.query);
     let result = await this.monitorService.getMonitoringRoutes(body, req.userId);
+    res.status(200).json(result);
+    return;
+  }
+
+  async updateRoutes(req: AuthenticatedRequest, res: Response) {
+    let body: UpdateMonitoringRoutesDto = await UpdateMonitoringRoutesDtoSchema.validate(req.body);
+    let result = await this.monitorService.updateMonitoringRoutes(body, req.userId);
     res.status(200).json(result);
     return;
   }

@@ -62,7 +62,7 @@ class AuthControllerClass {
 
   // HAVE TO ADD RATE LIMIT HERE
   async verifyEmail(req: Request, res: Response) {
-    let body : verifyEmailDto = await verifyEmailValidationSchema.validate(req.body);
+    let body: verifyEmailDto = await verifyEmailValidationSchema.validate(req.body);
     let result = await this.userService.verifyEmail(body.userId, body.otp);
     res.status(200).json(result);
     return;

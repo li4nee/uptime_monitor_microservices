@@ -27,9 +27,12 @@ app.use(
   }),
 );
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log("HIT");
-  next();
+// IMPROVEMENT CHAINCHA YESMA
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    message: "API gateway is running",
+    status: 200,
+  });
 });
 
 app.use(

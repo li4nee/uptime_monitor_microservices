@@ -6,7 +6,13 @@ import { SiteApiModel } from "../../repo/siteApi.repo";
 import { SiteMonitoringHistoryModel } from "../../repo/siteHistory.repo";
 import { DefaultResponse, InvalidInputError, NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../../typings/base.type";
 import { getPaginationValues } from "../../utils/base.utils";
-import { AddMonitoringRoutesDto, GetMonitoringHisoryDto, GetMonitoringRoutesDto, GetOneMonthOverviewDto } from "./monitorV1.dto";
+import {
+  AddMonitoringRoutesDto,
+  GetMonitoringHisoryDto,
+  GetMonitoringRoutesDto,
+  GetOneMonthOverviewDto,
+  UpdateMonitoringRoutesDto,
+} from "./monitorV1.dto";
 class MonitorServiceClass {
   constructor(
     private readonly siteModel = SiteModel,
@@ -54,6 +60,68 @@ class MonitorServiceClass {
     if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring routes");
     if (query.siteId || query.siteApiId) return await this.getMonitoringRouteIdProvided(query, userId);
     return await this.getMonitoringRoutesPaginated(query, userId);
+  }
+
+  async updateMonitoringRoutes(body: UpdateMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
+    if (!userId) throw new InvalidInputError("User ID is required to update monitoring routes");
+    if (!body.siteId) throw new InvalidInputError("Site ID is required to update monitoring routes");
+
+    const site = await this.siteModel.findOne({
+      where: { id: body.siteId, userId },
+      relations: ["siteApis", "siteApis.notificationSetting"],
+    });
+    if (!site) throw new InvalidInputError("Site not found for this user");
+    if (!site.siteApis) {
+      site.siteApis = [];
+    }
+    if (body.url) {
+      const existingSite = await this.checkIfTheUrlExists(body.url, userId);
+      if (existingSite && existingSite.id !== body.siteId) {
+        throw new InvalidInputError("This URL is already registered for another site.");
+      }
+      site.url = body.url;
+    }
+    if (body.siteName) site.siteName = body.siteName;
+    if (typeof body.isActive === "boolean") site.isActive = body.isActive;
+    if (typeof body.siteNotification === "boolean") site.notification = body.siteNotification;
+
+    if (Array.isArray(body.siteApis)) {
+      for (const apiInput of body.siteApis) {
+        let siteApi: SiteApi | undefined;
+
+        if (apiInput.siteApiId) {
+          siteApi = site.siteApis.find((api) => api.id === apiInput.siteApiId);
+          if (!siteApi) {
+            throw new InvalidInputError(`Site API not found for ID ${apiInput.siteApiId}`);
+          }
+        } else {
+          // No siteApiId means new API
+          siteApi = new SiteApi();
+          siteApi.site = site;
+          siteApi.notificationSetting = new siteNotificationSetting();
+          site.siteApis.push(siteApi);
+        }
+        siteApi.path = apiInput.path ?? siteApi.path;
+        siteApi.httpMethod = apiInput.httpMethod ?? siteApi.httpMethod;
+        siteApi.headers = apiInput.headers ?? {};
+        siteApi.body = apiInput.body ?? {};
+        siteApi.maxResponseTime = apiInput.maxResponseTime ?? 5000;
+        siteApi.maxNumberOfAttempts = apiInput.maxNumberOfAttempts ?? 3;
+        siteApi.priority = apiInput.priority ?? SITE_PRIORITY.MEDIUM;
+        siteApi.isActive = apiInput.isActive ?? true;
+        siteApi.notificationSetting.emailEnabled = apiInput.emailEnabled ?? true;
+        siteApi.notificationSetting.emailAddress = apiInput.emailAddress ?? "";
+        siteApi.notificationSetting.discordEnabled = apiInput.discordEnabled ?? false;
+        siteApi.notificationSetting.discordWebhook = apiInput.discordWebhook ?? "";
+        siteApi.notificationSetting.slackEnabled = apiInput.slackEnabled ?? false;
+        siteApi.notificationSetting.slackWebhook = apiInput.slackWebhook ?? "";
+        siteApi.notificationSetting.notificationFrequency = apiInput.notificationFrequency ?? NOTIFICATION_FREQUENCY.ONCE;
+        siteApi.notificationSetting.lastNotificationSentAt = null;
+      }
+    }
+
+    await this.siteModel.save(site);
+    return new DefaultResponse(200, "Monitoring routes updated successfully");
   }
 
   async getMonitoringHistory(query: GetMonitoringHisoryDto, userId: string): Promise<DefaultResponse> {
@@ -372,12 +440,12 @@ class MonitorServiceClass {
     };
   }
 
-  private async checkIfTheUrlExists(url: string, userId: string): Promise<boolean> {
+  private async checkIfTheUrlExists(url: string, userId: string): Promise<Site | null> {
     const site = await this.siteModel.findOne({
       where: { url, userId },
       select: { id: true },
     });
-    return site ? true : false;
+    return site;
   }
 }
 

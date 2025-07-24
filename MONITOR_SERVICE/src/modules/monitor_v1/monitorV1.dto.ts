@@ -48,6 +48,63 @@ export const AddMonitoringRoutesDtoSchema = yup.object().shape({
   isActive: yup.boolean().default(true),
 });
 
+export interface UpdateMonitoringRoutesDto {
+  siteId: string;
+  url?: string;
+  siteNotification?: boolean;
+  siteApis?: {
+    siteApiId?: string;
+    path?: string;
+    httpMethod?: HTTP_METHOD;
+    headers?: Record<string, string>;
+    body?: Record<string, any>;
+    maxResponseTime?: number;
+    maxNumberOfAttempts?: number;
+    priority?: SITE_PRIORITY;
+    isActive?: boolean;
+    emailEnabled?: boolean;
+    emailAddress?: string;
+    discordEnabled?: boolean;
+    discordWebhook?: string;
+    slackEnabled?: boolean;
+    slackWebhook?: string;
+    notificationFrequency?: NOTIFICATION_FREQUENCY;
+  }[];
+  siteName?: string;
+  isActive?: boolean;
+}
+
+export const UpdateMonitoringRoutesDtoSchema = yup.object().shape({
+  siteId: yup.string().required(),
+  siteApiId: yup.string().optional(),
+  url: yup.string().url().optional(),
+  siteNotification: yup.boolean().optional(),
+  siteApis: yup
+    .array()
+    .of(
+      yup.object().shape({
+        path: yup.string().optional(),
+        httpMethod: yup.string().oneOf(Object.values(HTTP_METHOD)).optional(),
+        headers: yup.object().optional(),
+        body: yup.object().optional(),
+        maxResponseTime: yup.number().optional(),
+        maxNumberOfAttempts: yup.number().optional(),
+        priority: yup.number().oneOf([1, 2, 3, 4]).optional(),
+        isActive: yup.boolean().optional(),
+        emailEnabled: yup.boolean().optional(),
+        emailAddress: yup.string().optional(),
+        discordEnabled: yup.boolean().optional(),
+        discordWebhook: yup.string().optional(),
+        slackEnabled: yup.boolean().optional(),
+        slackWebhook: yup.string().optional(),
+        notificationFrequency: yup.string().oneOf(Object.values(NOTIFICATION_FREQUENCY)).optional(),
+      }),
+    )
+    .optional(),
+  siteName: yup.string().optional(),
+  isActive: yup.boolean().optional(),
+});
+
 export interface GetMonitoringRoutesDto {
   isActive?: boolean;
   priority?: SITE_PRIORITY;
