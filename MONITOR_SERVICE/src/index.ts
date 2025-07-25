@@ -7,6 +7,8 @@ import { GlobalErrorHandler } from "./utils/base.utils";
 import { monitorV1Router } from "./modules/monitor_v1/monitorV1.route";
 import { attachProxiedUser } from "./middleware/attachUserId.middleware";
 import { getMessageBrokerProducer } from "./lib/Broker.lib";
+import swaggerUI from "swagger-ui-express";
+import { swaggerSpec } from "./swagger.config";
 
 dotenv.config();
 
@@ -21,7 +23,11 @@ app.get("/health", (req, res) => {
     status: 200,
   });
 });
+
+app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
 app.use(GlobalErrorHandler);
+
 app.listen(GlobalSettings.port, () => {
   console.log(`Monitor Service listening on port ${GlobalSettings.port}`);
   getMessageBrokerProducer();

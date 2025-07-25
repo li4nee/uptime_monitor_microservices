@@ -6,7 +6,8 @@ import { AppDataSource } from "./db.config";
 import { GlobalErrorHandler } from "./utility/base.utility";
 import { authRouter } from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
-
+import swaggerUI from "swagger-ui-express";
+import { swaggerSpec } from "./swagger.config";
 dotenv.config();
 
 const app = express();
@@ -24,6 +25,8 @@ app.get("/health", (req, res) => {
     status: 200,
   });
 });
+
+app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 app.listen(GlobalSettings.port, () => {
   console.log(`User Service listening on port ${GlobalSettings.port}`);
