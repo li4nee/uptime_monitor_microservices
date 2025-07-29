@@ -42,11 +42,6 @@ services:
     ports:
       - "9090:9090"
   
-  pushgateway:
-    image: prom/pushgateway
-    ports:
-      - "9091:9091"
-  
   grafana:
     image: grafana/grafana
     ports:
@@ -123,6 +118,8 @@ services:
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_USER=${MAIL_USER}
       - MAIL_PASS=${MAIL_PASS}
+    ports:
+      - "3003:3003"
     depends_on:
       rabbitmq:
         condition: service_healthy
