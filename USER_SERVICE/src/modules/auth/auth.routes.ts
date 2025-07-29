@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { Wrapper } from "../../utility/base.utility";
+import { Wrapper } from "../../utility/base.utils";
 import { AuthController } from "./auth.controller";
 import { authenticate } from "../../middleware/authenticator.middleware";
 
 const authRouter = Router();
-
 
 /**
  * @swagger

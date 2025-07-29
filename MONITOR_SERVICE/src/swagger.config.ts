@@ -3,7 +3,7 @@ import { resgisterSiteMonitorSwagger, UpdateMonitoringRoutesSwagger } from "./mo
 
 const options = {
   definition: {
-    openapi: "3.0.0", 
+    openapi: "3.0.0",
     info: {
       title: "Monitor Service API",
       version: "1.0.0",
@@ -19,7 +19,7 @@ const options = {
       },
       schemas: {
         RegisterSiteMonitorDto: resgisterSiteMonitorSwagger,
-        UpdateSiteMonitorDto:UpdateMonitoringRoutesSwagger
+        UpdateSiteMonitorDto: UpdateMonitoringRoutesSwagger,
       },
     },
     security: [
@@ -28,7 +28,7 @@ const options = {
       },
     ],
   },
-  apis: ["./src/modules/**/*.ts"]
+  apis: ["./src/modules/**/*.ts"],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);

@@ -90,7 +90,7 @@ export const resgisterSiteMonitorSwagger = {
       default: true,
     },
   },
-}
+};
 
 export const GetMonitoringRouteSwagger = {
   type: "object",
@@ -100,59 +100,58 @@ export const GetMonitoringRouteSwagger = {
       description: "ID of the registered site",
       example: "60c72b2f9b1e8c001c8e4d3a",
     },
-    siteApiId:{
+    siteApiId: {
       type: "string",
       description: "ID of the specific API within the site",
       example: "60c72b2f9b1e8c001c8e4d3b",
-      required: false
+      required: false,
     },
-    search:{
+    search: {
       type: "string",
       description: "Optional search term to filter APIs by path or URL or site name",
       example: "/health",
     },
-    orderBy:{
+    orderBy: {
       type: "enum",
       description: "Field to order the results by",
-      enum: ["createdAt","url"],
+      enum: ["createdAt", "url"],
       example: "createdAt",
-      default: "createdAt"
+      default: "createdAt",
     },
-    order:{
+    order: {
       type: "enum",
       description: "Order direction (asc or desc)",
       enum: ["ASC", "DESC"],
       example: "DESC",
-      default: "DESC"
+      default: "DESC",
     },
-    limit:{
+    limit: {
       type: "number",
       description: "Number of results to return per page.Max value is 20 and min value is 1",
       example: 10,
-      default: 10
+      default: 10,
     },
-    page:{
+    page: {
       type: "number",
       description: "Page number for pagination, starts from 0",
       example: 0,
-      default: 0
+      default: 0,
     },
     isActive: {
       type: "boolean",
       description: "Filter by active status of the site or API",
       example: true,
-      default: true
+      default: true,
     },
     priority: {
       type: "number",
       description: "Filter by priority of the API",
       enum: [1, 2, 3, 4],
       example: 2,
-      default: SITE_PRIORITY.MEDIUM
-    }
-    
+      default: SITE_PRIORITY.MEDIUM,
+    },
   },
-}
+};
 
 export const GetMonitoringHistorySwagger = {
   type: "object",
@@ -191,39 +190,39 @@ export const GetMonitoringHistorySwagger = {
       description: "Optional End date for filtering history records",
       example: "2023-01-31T23:59:59Z",
     },
-    httpMethod:{
-      type:"enum",
-      description:"HTTP method used for the API request",
-      enum:Object.values(HTTP_METHOD),
-      example:"GET"
+    httpMethod: {
+      type: "enum",
+      description: "HTTP method used for the API request",
+      enum: Object.values(HTTP_METHOD),
+      example: "GET",
     },
-    page:{
-      type:"number",
-      description:"Page number for pagination, starts from 1",
-      defaultValue:1,
-      minimumValue:1
+    page: {
+      type: "number",
+      description: "Page number for pagination, starts from 1",
+      defaultValue: 1,
+      minimumValue: 1,
     },
-    limit:{
-      type:"number",
-      description:"Number of results to return per page. Max value is 100 and min value is 1.",
-      defaultValue:10,
-      minimumValue:1,
-      maximumValue:100
+    limit: {
+      type: "number",
+      description: "Number of results to return per page. Max value is 100 and min value is 1.",
+      defaultValue: 10,
+      minimumValue: 1,
+      maximumValue: 100,
     },
-    order:{
-      type:"enum",
-      description:"Order direction (asc or desc)",
-      enum:["ASC","DESC"],
-      defaultValue:"DESC"
+    order: {
+      type: "enum",
+      description: "Order direction (asc or desc)",
+      enum: ["ASC", "DESC"],
+      defaultValue: "DESC",
     },
-    orderBy:{
-      type:"enum",
-      description:"Field to order the results by",
-      enum:["checkedAt","responseTime"],
-      defaultValue:"checkedAt"
-    }
-  }
-}
+    orderBy: {
+      type: "enum",
+      description: "Field to order the results by",
+      enum: ["checkedAt", "responseTime"],
+      defaultValue: "checkedAt",
+    },
+  },
+};
 
 export const GetOneMonthOverviewSwagger = {
   type: "object",
@@ -244,14 +243,14 @@ export const GetOneMonthOverviewSwagger = {
       description: "Year and month in YYYY-MM format",
       example: "2023-01",
     },
-    httpMethod:{
-      type:"enum",
-      description:"HTTP method used for the API request",
-      enum:Object.values(HTTP_METHOD),
-      example:"GET"
-    }
-  }
-}
+    httpMethod: {
+      type: "enum",
+      description: "HTTP method used for the API request",
+      enum: Object.values(HTTP_METHOD),
+      example: "GET",
+    },
+  },
+};
 
 export const UpdateMonitoringRoutesSwagger = {
   type: "object",

@@ -2,7 +2,7 @@ import swaggerJSDoc from "swagger-jsdoc";
 
 const options = {
   definition: {
-    openapi: "3.0.0", 
+    openapi: "3.0.0",
     info: {
       title: "User Service API",
       version: "1.0.0",
@@ -14,11 +14,9 @@ const options = {
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
-        }
+        },
       },
-      schemas: {
-      
-      },
+      schemas: {},
     },
     security: [
       {
@@ -26,7 +24,7 @@ const options = {
       },
     ],
   },
-  apis: ["./src/modules/**/*.ts"]
+  apis: ["./src/modules/**/*.ts"],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);

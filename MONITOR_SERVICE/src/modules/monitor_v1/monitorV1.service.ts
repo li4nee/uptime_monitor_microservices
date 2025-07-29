@@ -6,6 +6,7 @@ import { SiteApiModel } from "../../repo/siteApi.repo";
 import { SiteMonitoringHistoryModel } from "../../repo/siteHistory.repo";
 import { DefaultResponse, InvalidInputError, NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../../typings/base.type";
 import { getPaginationValues } from "../../utils/base.utils";
+import { logger } from "../../utils/logger.utils";
 import {
   AddMonitoringRoutesDto,
   GetMonitoringHisoryDto,
@@ -23,8 +24,15 @@ class MonitorServiceClass {
   async resisterRoutesApiToMonitor(body: AddMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to register monitoring routes");
     let existingSite = await this.checkIfTheUrlExists(body.url, userId);
-    if (existingSite)
-      throw new InvalidInputError("This URL is already registered for monitoring,please edit the existing site instead of creating a new one");
+    if (existingSite) {
+      logger.warn("Attempt to register existing URL for monitoring", {
+        userId,
+        url: body.url,
+        timestamp: new Date().toISOString(),
+        existingSiteId: existingSite.id,
+      });
+      throw new InvalidInputError("This URL is already registered for monitoring,please edit the existing site instead of creating a new one", true);
+    }
     let newSite = new Site();
     newSite.url = body.url;
     newSite.userId = userId;
@@ -53,6 +61,13 @@ class MonitorServiceClass {
       return siteApi;
     });
     await this.siteModel.save(newSite);
+    logger.info("Monitoring routes registered successfully", {
+      userId,
+      siteId: newSite.id,
+      url: newSite.url,
+      siteName: newSite.siteName,
+      timestamp: new Date().toISOString(),
+    });
     return new DefaultResponse(200, "Monitoring routes registered successfully");
   }
 
@@ -64,20 +79,44 @@ class MonitorServiceClass {
 
   async updateMonitoringRoutes(body: UpdateMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to update monitoring routes");
-    if (!body.siteId) throw new InvalidInputError("Site ID is required to update monitoring routes");
+
+    if (!body.siteId) {
+      logger.warn("Site ID is required to update monitoring routes", {
+        userId,
+        timestamp: new Date().toISOString(),
+        action: "update monitoring routes",
+        body,
+      });
+      throw new InvalidInputError("Site ID is required to update monitoring routes", true);
+    }
 
     const site = await this.siteModel.findOne({
       where: { id: body.siteId, userId },
       relations: ["siteApis", "siteApis.notificationSetting"],
     });
-    if (!site) throw new InvalidInputError("Site not found for this user");
+    if (!site) {
+      logger.warn("Site not found for update", {
+        userId,
+        siteId: body.siteId,
+        timestamp: new Date().toISOString(),
+        body,
+      });
+      throw new InvalidInputError("Site not found for this user", true);
+    }
     if (!site.siteApis) {
       site.siteApis = [];
     }
     if (body.url) {
       const existingSite = await this.checkIfTheUrlExists(body.url, userId);
       if (existingSite && existingSite.id !== body.siteId) {
-        throw new InvalidInputError("This URL is already registered for another site.");
+        logger.warn("Attempt to update URL to an existing one", {
+          userId,
+          url: body.url,
+          existingSiteId: existingSite.id,
+          timestamp: new Date().toISOString(),
+          body,
+        });
+        throw new InvalidInputError("This URL is already registered for another site.", true);
       }
       site.url = body.url;
     }
@@ -92,7 +131,13 @@ class MonitorServiceClass {
         if (apiInput.siteApiId) {
           siteApi = site.siteApis.find((api) => api.id === apiInput.siteApiId);
           if (!siteApi) {
-            throw new InvalidInputError(`Site API not found for ID ${apiInput.siteApiId}`);
+            logger.warn("Site API not found for update", {
+              userId,
+              siteApiId: apiInput.siteApiId,
+              siteId: body.siteId,
+              timestamp: new Date().toISOString(),
+            });
+            throw new InvalidInputError(`Site API not found for ID ${apiInput.siteApiId}`, true);
           }
         } else {
           // No siteApiId means new API
@@ -121,6 +166,13 @@ class MonitorServiceClass {
     }
 
     await this.siteModel.save(site);
+    logger.info("Monitoring routes updated successfully", {
+      userId,
+      siteId: site.id,
+      url: site.url,
+      siteName: site.siteName,
+      timestamp: new Date().toISOString(),
+    });
     return new DefaultResponse(200, "Monitoring routes updated successfully");
   }
 
@@ -139,7 +191,23 @@ class MonitorServiceClass {
           siteApi: { id: query.siteApiId, site: { id: query.siteId, userId } },
         },
       });
-      if (!history) throw new InvalidInputError("Monitoring history not found");
+      if (!history) {
+        logger.warn("Monitoring history not found", {
+          userId,
+          monitoringHistoryId: query.monitoringHistoryId,
+          siteApiId: query.siteApiId,
+          siteId: query.siteId,
+          timestamp: new Date().toISOString(),
+        });
+        throw new InvalidInputError("Monitoring history not found", true);
+      }
+      logger.info("Monitoring history fetched successfully", {
+        userId,
+        monitoringHistoryId: query.monitoringHistoryId,
+        siteApiId: query.siteApiId,
+        siteId: query.siteId,
+        timestamp: new Date().toISOString(),
+      });
       return new DefaultResponse(200, "Monitoring history fetched successfully", {
         history: [history],
         pagination: null,
@@ -176,6 +244,16 @@ class MonitorServiceClass {
     if (query.httpMethod) queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
     const [history, total] = await queryBuilder.getManyAndCount();
     let totalPages = Math.ceil(total / limit);
+    logger.info("Monitoring history fetched successfully", {
+      userId,
+      siteId: query.siteId,
+      siteApiId: query.siteApiId,
+      total,
+      page: query.page || 0,
+      limit,
+      totalPages,
+      timestamp: new Date().toISOString(),
+    });
     return new DefaultResponse(200, "Monitoring history fetched successfully", {
       history,
       pagination: {
@@ -260,6 +338,19 @@ class MonitorServiceClass {
     }
 
     const averageResponseTime = totalCount > 0 ? Math.round(totalResponseTime / totalCount) : null;
+    logger.info("One month overview fetched successfully", {
+      userId,
+      siteId,
+      siteApiId,
+      yearAndMonth,
+      httpMethod,
+      averageResponseTime,
+      upCount,
+      downCount,
+      totalResponseTime,
+      calendarLength: calendar.length,
+      timestamp: new Date().toISOString(),
+    });
     return new DefaultResponse(200, "One month overview fetched successfully", {
       overview: {
         averageResponseTime,
@@ -311,6 +402,7 @@ class MonitorServiceClass {
       queryBuilder.andWhere("(site.url ILIKE :search OR site.siteName ILIKE :search OR siteApi.path ILIKE :search)", { search: `%${query.search}%` });
     const [sites, total] = await queryBuilder.getManyAndCount();
     let totalPages = Math.ceil(total / limit);
+
     return new DefaultResponse(200, "Monitoring routes fetched successfully", {
       sites,
       pagination: {
@@ -328,7 +420,12 @@ class MonitorServiceClass {
     if (siteApiId && !siteId) {
       const siteApi = await this.findSiteApiWithSite(siteApiId, userId);
       if (!siteApi) {
-        throw new InvalidInputError("Site API not found for this user");
+        logger.warn("Site API not found for user", {
+          userId,
+          siteApiId,
+          timestamp: new Date().toISOString(),
+        });
+        throw new InvalidInputError("Site API not found for this user", true);
       }
       const { site, ...rest } = siteApi;
       return new DefaultResponse(200, "Monitoring route fetched successfully", {

@@ -10,7 +10,7 @@ import {
   verifyEmailValidationSchema,
 } from "./auth.dto";
 import { AuthService } from "./auth.service";
-import { removeCookie, setCookie } from "../../utility/base.utility";
+import { removeCookie, setCookie } from "../../utility/base.utils";
 import { AuthenticatedRequest, InvalidInputError } from "../../typings/base.typings";
 
 class AuthControllerClass {
@@ -48,7 +48,10 @@ class AuthControllerClass {
 
   async changePassword(req: AuthenticatedRequest, res: Response) {
     let body = await changePasswordValidationSchema.validate(req.body);
-    let message = await this.userService.changePassword(body, req.userId);
+    if (!req.refreshToken) {
+      throw new InvalidInputError("Refresh token is required");
+    }
+    let message = await this.userService.changePassword(body, req.userId, req.refreshToken);
     res.status(200).json(message);
     return;
   }

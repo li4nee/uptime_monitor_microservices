@@ -3,23 +3,6 @@ import * as yup from "yup";
 import { AuthenticatedRequest, CustomError } from "../typings/base.type";
 import path from "path";
 
-export function GlobalErrorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
-  console.log("ROUTE:", req.url, "METHOD:", req.method);
-  console.log("ERROR MESSAGE :", err.message);
-  console.log("ERROR STACK :", err.stack);
-  if (err instanceof yup.ValidationError) {
-    res.status(400).json({ message: err.errors, status: 400, path: req.url });
-    return;
-  } else if (err instanceof CustomError) {
-    let statusCode = err.statusCode;
-    res.status(statusCode).json({ message: err.message, status: statusCode, path: req.url });
-    return;
-  } else {
-    res.status(500).json({ message: "Opps some unexpected error occured", status: 500, path: req.url });
-    return;
-  }
-}
-
 export const generateId = (length: number = 20): string => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";

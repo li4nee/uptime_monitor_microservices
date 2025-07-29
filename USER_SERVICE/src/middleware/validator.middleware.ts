@@ -1,6 +1,6 @@
 import * as yup from "yup";
 import { Request, Response, NextFunction } from "express";
-import { validateDTO } from "../utility/base.utility";
+import { validateDTO } from "../utility/base.utils";
 
 function validationCreateFunction(source: "body" | "query") {
   return (schema: yup.AnySchema) => {

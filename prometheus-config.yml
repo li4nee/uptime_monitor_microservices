@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: "API_GATEWAY"
+    static_configs:
+      - targets: ["api-gateway:3000"]
+  - job_name: "USER_SERVICE"
+    static_configs:
+      - targets: ["user-service:3001"]
+  - job_name: "MONITOR_SERVICE"
+    static_configs:
+      - targets: ["monitor-service:3002"]
+  - job_name: "WORKER"
+    static_configs:
+      - targets: ['pushgateway:9091']

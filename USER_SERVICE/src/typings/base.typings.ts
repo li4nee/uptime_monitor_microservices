@@ -2,22 +2,23 @@ import { Request, Response, NextFunction } from "express";
 export class CustomError {
   statusCode: number;
   message: string | null;
-
-  constructor(message: string, statusCode: number) {
+  logged: boolean;
+  constructor(message: string, statusCode: number, logged: boolean = false) {
     this.statusCode = statusCode;
     this.message = message;
+    this.logged = logged;
   }
 }
 
 export class InvalidInputError extends CustomError {
-  constructor(message: string = "Invalid input") {
-    super(message, 400);
+  constructor(message: string = "Invalid input", logged: boolean = false) {
+    super(message, 400, logged);
   }
 }
 
 export class PermissionNotGranted extends CustomError {
-  constructor(messag: string = "Permission not granted") {
-    super(messag, 403);
+  constructor(messag: string = "Permission not granted", logged: boolean = false) {
+    super(messag, 403, logged);
   }
 }
 
