@@ -14,8 +14,6 @@ dotenv.config();
 const app = express();
 
 // Middleware to parse JSON, URL-encoded data and cookies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // CORS configuration , have to configure later
@@ -33,16 +31,19 @@ app.use(
     target: "http://user-service:3001",
     changeOrigin: true,
     pathRewrite: { "^/user": "" },
+    timeout: 5000,
+    proxyTimeout: 5000,
     on: {
       proxyReq: (proxyReq, req: Request, res: Response) => {
         logger.info(`Proxying /user request`, {
-          method: req.method,
-          url: req.originalUrl,
-          ip: req.ip,
-          headers: req.headers,
-          cookies: req.cookies,
-          timestamp: new Date().toISOString(),
+          // method: req.method,
+          // url: req.originalUrl,
+          // ip: req.ip,
+          // headers: req.headers,
+          // cookies: req.cookies,
+          // timestamp: new Date().toISOString(),
         });
+        return 
       },
       proxyRes: (proxyRes, req: Request, res: Response) => {
         logger.info(`Response from /user service`, {

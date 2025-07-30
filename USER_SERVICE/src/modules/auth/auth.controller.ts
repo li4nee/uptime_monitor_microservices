@@ -24,6 +24,7 @@ class AuthControllerClass {
   }
 
   async login(req: Request, res: Response) {
+    console.log("Login request received");
     let data: loginDto = await loginValidationSchema.validate(req.body);
     let result = await this.userService.login(data);
     setCookie(res, "refreshToken", result.data.refreshToken, 60 * 60 * 24 * 7 * 1000);

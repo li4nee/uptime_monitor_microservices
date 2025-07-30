@@ -4,6 +4,7 @@ import { NOTIFICATION_FREQUENCY, SiteMoniorDTO } from "../../typings/base.type";
 import { SiteMonitoringHistory } from "../../entity/siteMonitoringHistory.entity";
 import { SiteHistorySavingQueue } from "../queue/saveHistoryToDb.queue";
 import { getMessageBrokerProducer } from "../Broker.lib";
+import { logger } from "../../utils/logger.utils";
 
 export class SiteMonitorWorker {
   private messageBrokerProducer = getMessageBrokerProducer();
@@ -12,6 +13,8 @@ export class SiteMonitorWorker {
 
   async processJob(job: Job<SiteMoniorDTO>): Promise<void> {
     const data = job.data;
+
+    logger.info(`Processing job ${job.id} for site ${data.url}`);
 
     const axiosConfig: AxiosRequestConfig = {
       url: data.url,
@@ -28,10 +31,12 @@ export class SiteMonitorWorker {
     let isUp = false;
     let errorLog = "";
     let isSlow = false;
+
     try {
       const response = await axios(axiosConfig);
       duration = performance.now() - start;
       statusCode = response.status;
+
       if (statusCode >= 200 && statusCode < 400) {
         if (duration <= (data.maxResponseTime || 5000)) {
           isUp = true;
@@ -39,10 +44,12 @@ export class SiteMonitorWorker {
           isSlow = true;
         }
       }
+
+      logger.info(`Site ${data.url} responded with status ${statusCode} in ${duration.toFixed(2)}ms`);
     } catch (error: any) {
       duration = performance.now() - start;
       errorLog = error?.message || "Unknown error";
-      console.log(`Error processing job ${job.id}:`, error);
+      logger.error(`Error processing job ${job.id} for ${data.url}: ${errorLog}`, { error });
     }
 
     const history = new SiteMonitoringHistory();
@@ -57,22 +64,29 @@ export class SiteMonitorWorker {
     history.body = data.body || {};
     history.errorLog = isUp ? "" : errorLog;
     history.attemptNumber = job.attemptsMade + 1;
+
     if (!isUp && data.notification) {
       const { notification } = data;
       if (this.shouldSendNotification(notification.lastSentNotificationAt, notification.notificationFrequency)) {
+        logger.info(`Sending notification for site ${data.url} (DOWN or SLOW)`);
         await this.sendNotifications(data, isUp, isSlow);
+      } else {
+        logger.info(`Skipping notification for site ${data.url} due to frequency control`);
       }
     }
+
     try {
       await SiteHistorySavingQueue.add("save-history", history);
+      logger.info(`Queued monitoring history save for siteApi ${data.siteApiId}`);
     } catch (saveErr) {
-      console.error(`Failed to queue history save for SiteApi ${data.siteApiId}:`, saveErr);
+      logger.error(`Failed to queue history save for siteApi ${data.siteApiId}`, { error: saveErr });
     }
   }
 
   private shouldSendNotification(lastSent: Date | null | undefined, frequency: NOTIFICATION_FREQUENCY | undefined): boolean {
     if (!frequency || frequency === NOTIFICATION_FREQUENCY.NONE) return false;
     if (!lastSent) return true;
+
     const diffMs = new Date().getTime() - new Date(lastSent).getTime();
 
     switch (frequency) {
@@ -93,14 +107,22 @@ export class SiteMonitorWorker {
     const { notification } = siteMonitor;
     if (!notification) return;
 
-    if (notification.emailEnabled && notification.emailAddress) {
-      await this.sendEmail(siteMonitor, isUp, isSlow);
-    }
-    if (notification.slackEnabled && notification.slackWebhook) {
-      await this.sendSlackNotification(siteMonitor, isUp, isSlow);
-    }
-    if (notification.discordEnabled && notification.discordWebhook) {
-      await this.sendDiscordNotification(siteMonitor, isUp, isSlow);
+    try {
+      if (notification.emailEnabled && notification.emailAddress) {
+        await this.sendEmail(siteMonitor, isUp, isSlow);
+      }
+
+      if (notification.slackEnabled && notification.slackWebhook) {
+        await this.sendSlackNotification(siteMonitor, isUp, isSlow);
+      }
+
+      if (notification.discordEnabled && notification.discordWebhook) {
+        await this.sendDiscordNotification(siteMonitor, isUp, isSlow);
+      }
+
+      logger.info(`Notification(s) sent for site ${siteMonitor.url}`);
+    } catch (error) {
+      logger.error(`Failed to send one or more notifications for site ${siteMonitor.url}`, { error });
     }
   }
 
@@ -122,11 +144,13 @@ export class SiteMonitorWorker {
       <hr/>
       <small>This is an automated alert from the Uptime Monitoring System.</small>
     </div>
-  `;
+    `;
+
     try {
       await this.messageBrokerProducer.sendEmail(siteMonitor.notification!.emailAddress!, subject, body);
+      logger.info(`Email sent to ${siteMonitor.notification!.emailAddress}`);
     } catch (error) {
-      console.error(`Failed to send email to ${siteMonitor.notification!.emailAddress}:`, error);
+      logger.error(`Failed to send email to ${siteMonitor.notification!.emailAddress}`, { error });
     }
   }
 
@@ -137,8 +161,9 @@ export class SiteMonitorWorker {
 
     try {
       await this.messageBrokerProducer.sendSlackMessage(siteMonitor.notification!.slackWebhook!, message);
+      logger.info(`Slack message sent to webhook ${siteMonitor.notification!.slackWebhook}`);
     } catch (error) {
-      console.error(`Failed to send Slack message to ${siteMonitor.notification!.slackWebhook}:`, error);
+      logger.error(`Failed to send Slack message to ${siteMonitor.notification!.slackWebhook}`, { error });
     }
   }
 
@@ -155,8 +180,9 @@ export class SiteMonitorWorker {
 
     try {
       await this.messageBrokerProducer.sendDiscordMessage(siteMonitor.notification!.discordWebhook!, message);
+      logger.info(`Discord message sent to webhook ${siteMonitor.notification!.discordWebhook}`);
     } catch (e) {
-      console.error(`Failed to send Discord message to ${siteMonitor.notification!.discordWebhook}:`, e);
+      logger.error(`Failed to send Discord message to ${siteMonitor.notification!.discordWebhook}`, { error: e });
     }
   }
 }

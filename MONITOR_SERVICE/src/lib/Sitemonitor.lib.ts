@@ -3,9 +3,11 @@ import { SiteApi } from "../entity/siteApi.entity";
 import { SiteModel } from "../repo/site.repo";
 import { SiteMoniorDTO } from "../typings/base.type";
 import { SiteMonitorQueue } from "./queue/sitemonitor.queue";
+import { logger } from "../utils/logger.utils";
 
 export class SiteMonitorService {
   private readonly BatchSize = 100;
+
   constructor(
     private readonly siteModel = SiteModel,
     private readonly siteMonitorQueue = SiteMonitorQueue,
@@ -14,6 +16,8 @@ export class SiteMonitorService {
   async monitorTheSites(): Promise<void> {
     let page = 0;
     try {
+      logger.info("Starting site monitoring process");
+
       while (true) {
         const sites = await this.siteModel.find({
           where: { trash: false, siteApis: { isActive: true } },
@@ -47,21 +51,33 @@ export class SiteMonitorService {
           },
         });
 
-        if (!sites?.length) break;
+        if (!sites?.length) {
+          logger.info(`No more sites to monitor after page ${page}`);
+          break;
+        }
+
+        logger.info(`Monitoring page ${page}, sites found: ${sites.length}`);
 
         const allJobPromises = sites.flatMap((site) => {
-          if (!site.siteApis?.length) return [];
+          if (!site.siteApis?.length) {
+            logger.warn(`Site ${site.id} has no active APIs`);
+            return [];
+          }
 
           return site.siteApis.map((api) =>
-            this.queueSiteApiJob(site, api).catch((err) => console.error(`Failed to queue job for siteApi ${api.id}:`, err)),
+            this.queueSiteApiJob(site, api).catch((err) =>
+              logger.error(`Failed to queue job for siteApi ${api.id}`, { error: err }),
+            ),
           );
         });
 
         await Promise.all(allJobPromises);
         page++;
       }
+
+      logger.info("Completed monitoring all sites");
     } catch (error) {
-      console.error("Error monitoring sites:", error);
+      logger.error("Error monitoring sites", { error });
     }
   }
 
@@ -88,7 +104,8 @@ export class SiteMonitorService {
       },
       userId: site.userId,
     };
-    this.siteMonitorQueue
+
+    await this.siteMonitorQueue
       .add("monitor-site-api", jobData, {
         attempts: siteApi.maxNumberOfAttempts || 3,
         backoff: {
@@ -99,8 +116,11 @@ export class SiteMonitorService {
         removeOnFail: true,
         jobId: `${site.id}-${siteApi.id}`,
       })
+      .then(() =>
+        logger.info(`Queued job for siteApi ${siteApi.id} of site ${site.id}`),
+      )
       .catch((error) => {
-        console.error(`Failed to add job for siteApi ${siteApi.id}:`, error);
+        logger.error(`Failed to add job for siteApi ${siteApi.id}`, { error });
       });
   }
 }

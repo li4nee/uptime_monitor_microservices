@@ -75,6 +75,7 @@ class Broker {
       await this.assertQueue(this.emailQueue, true);
       await this.bindQueue(this.emailQueue, this.exchangeName, this.routingKeyEmail);
     } catch (err) {
+      console.error("Error setting up RabbitMQ broker:", err);
       throw new Error("Failed to setup RabbitMQ broker: " + (err as Error).message);
     }
   }

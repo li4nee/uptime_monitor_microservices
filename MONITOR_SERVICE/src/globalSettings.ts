@@ -9,7 +9,7 @@ const GlobalSettings = {
     url: process.env.REDIS_URL || "redis://redis:6379",
   },
   rabbitMQ: {
-    url: process.env.RABBITMQ_URL || "amqp://rabbitmq",
+    url: process.env.RABBITMQ_URL || "amqp://rabbitmq:5672",
     exchange: process.env.RABBITMQ_EXCHANGE || "uptime_monitor",
     queueEmail: process.env.RABBITMQ_QUEUE || "uptime_monitor_queue_email",
     queueSlack: process.env.RABBITMQ_QUEUE_SLACK || "uptime_monitor_queue_slack",
@@ -24,7 +24,4 @@ const GlobalSettings = {
     pass: process.env.MAIL_PASS || "password",
   },
 };
-
-console.log("Global Settings Loaded:", GlobalSettings);
-
 export { GlobalSettings };

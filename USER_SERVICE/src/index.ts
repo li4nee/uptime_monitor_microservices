@@ -11,18 +11,22 @@ import { swaggerSpec } from "./swagger.config";
 import { GlobalErrorHandler } from "./middleware/globalErrorHandler.middleware";
 import { logger } from "./utility/logger.utils";
 import * as promClient from "prom-client";
+
 dotenv.config();
 
 const app = express();
 app.use(cookieParser());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/auth", authRouter);
 
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
+app.get("/", (req: Request, res: Response) => {
+  res.send("Welcome to the User Service API");
+});
 let collectDefaultMetrix = promClient.collectDefaultMetrics;
 collectDefaultMetrix({ register: promClient.register });
 app.get("/metrics", async (req: Request, res: Response) => {
@@ -44,7 +48,7 @@ app.get("/metrics", async (req: Request, res: Response) => {
 
 app.use(GlobalErrorHandler);
 
-app.listen(GlobalSettings.port, () => {
+app.listen(GlobalSettings.port,"0.0.0.0", () => {
   logger.info(`User Service is running on port ${GlobalSettings.port}`);
   AppDataSource.initialize()
     .then(async () => {

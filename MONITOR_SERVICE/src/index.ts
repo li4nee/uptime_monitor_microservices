@@ -43,7 +43,7 @@ app.get("/metrics", async (req: Request, res: Response) => {
 
 app.use(GlobalErrorHandler);
 
-app.listen(GlobalSettings.port, () => {
+app.listen(GlobalSettings.port,"0.0.0.0", () => {
   logger.info(`Monitor Service listening on port ${GlobalSettings.port}`);
   getMessageBrokerProducer();
   AppDataSource.initialize()
