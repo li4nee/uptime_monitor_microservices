@@ -4,13 +4,12 @@ import { GlobalSettings } from "../globalSettings";
 import { logger } from "./logger.utils";
 
 const transporter = nodemailer.createTransport({
-  service:"gmail",
+  service: "gmail",
   auth: {
     user: GlobalSettings.mail.user,
     pass: GlobalSettings.mail.pass,
   },
 });
-
 
 export async function sendEmail(to: string | string[], mailOptions: Omit<MailOptions, "to">): Promise<void> {
   const recipients = Array.isArray(to) ? to : [to];

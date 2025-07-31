@@ -278,5 +278,5 @@ authRouter.get("/profile", authenticate, Wrapper(AuthController.getUser.bind(Aut
 authRouter.patch("/email", authenticate, Wrapper(AuthController.changeEmail.bind(AuthController)));
 authRouter.patch("/password", authenticate, Wrapper(AuthController.changePassword.bind(AuthController)));
 authRouter.post("/verify-email", Wrapper(AuthController.verifyEmail.bind(AuthController)));
-authRouter.get("/send-verification-mail",Wrapper(AuthController.sendVerificationMail.bind(AuthController)))
+authRouter.get("/send-verification-mail", Wrapper(AuthController.sendVerificationMail.bind(AuthController)));
 export { authRouter };

@@ -74,13 +74,11 @@ class AuthControllerClass {
   }
 
   // HAVE TO ADD RATE LIMIT HERE
-  async sendVerificationMail(req:Request,res:Response)
-  {
-    let body:string = req.body.email
-    if(!body)
-      throw new InvalidInputError("Email is required")
-    let result = await this.userService.sendVerificationMail(body)
-    return result
+  async sendVerificationMail(req: Request, res: Response) {
+    let body: string = req.body.email;
+    if (!body) throw new InvalidInputError("Email is required");
+    let result = await this.userService.sendVerificationMail(body);
+    return result;
   }
 }
 

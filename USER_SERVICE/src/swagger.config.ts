@@ -23,15 +23,17 @@ const options = {
         BearerAuth: [],
       },
     ],
-    server:[
+    server: [
       {
-        url:"/user",
-        description:"User Service API Base URL"
-      }
+        url: "/user",
+        description: "User Service API Base URL",
+      },
     ],
     paths: {
-    "/auth": { /* this will resolve to /api/v1/users */ },
-  },
+      "/auth": {
+        /* this will resolve to /api/v1/users */
+      },
+    },
   },
   apis: ["./src/modules/**/*.ts"],
 };

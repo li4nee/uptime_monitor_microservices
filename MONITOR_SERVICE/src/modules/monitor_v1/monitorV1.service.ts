@@ -265,7 +265,7 @@ class MonitorServiceClass {
   }
 
   async getOneMonthOverview(query: GetOneMonthOverviewDto, userId: string) {
-    const { siteId, siteApiId, yearAndMonth} = query;
+    const { siteId, siteApiId, yearAndMonth } = query;
     if (!userId) throw new InvalidInputError("User ID is required to fetch one month overview");
     if (!siteId) throw new InvalidInputError("Site ID is required");
     if (!siteApiId) throw new InvalidInputError("Site API ID is required");

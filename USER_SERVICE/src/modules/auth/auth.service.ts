@@ -162,8 +162,7 @@ export class AuthService {
     return new DefaultResponse(200, "Email verified successfully");
   }
 
-  async sendVerificationMail(email:string)
-  {
+  async sendVerificationMail(email: string) {
     const user = await this.checkIfUserExistsAndReturnUser(email, "email");
     if (!user) {
       logger.warn("User with this email does not exist", { email });
@@ -190,7 +189,7 @@ export class AuthService {
     const whereClause = type === "email" ? { email: data } : { id: data };
     const user = await this.userModel.findOne({
       where: whereClause,
-      select: { id: true, password: true, email: true,emailVerified:true },
+      select: { id: true, password: true, email: true, emailVerified: true },
     });
     return user;
   }

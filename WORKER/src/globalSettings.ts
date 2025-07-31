@@ -14,7 +14,7 @@ const GlobalSettings = {
   mail: {
     host: process.env.MAIL_HOST,
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS
-  }
+    pass: process.env.MAIL_PASS,
+  },
 };
 export { GlobalSettings };
