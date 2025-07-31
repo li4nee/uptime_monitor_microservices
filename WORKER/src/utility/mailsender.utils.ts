@@ -1,15 +1,16 @@
 import nodemailer from "nodemailer";
 import { MailOptions } from "../typings/base.type";
+import { GlobalSettings } from "../globalSettings";
+import { logger } from "./logger.utils";
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.example.com",
-  port: 587,
-  secure: false,
+  service:"gmail",
   auth: {
-    user: "your_email@example.com",
-    pass: "your_email_password",
+    user: GlobalSettings.mail.user,
+    pass: GlobalSettings.mail.pass,
   },
 });
+
 
 export async function sendEmail(to: string | string[], mailOptions: Omit<MailOptions, "to">): Promise<void> {
   const recipients = Array.isArray(to) ? to : [to];
@@ -19,7 +20,7 @@ export async function sendEmail(to: string | string[], mailOptions: Omit<MailOpt
   try {
     await Promise.all(sendPromises);
   } catch (error) {
-    console.error("Error sending email(s):", error);
+    logger.error("Error sending email:", error);
     return;
   }
 }

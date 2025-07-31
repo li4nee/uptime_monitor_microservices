@@ -8,6 +8,7 @@ import { AuthenticatedRequest, CustomError } from "./typings/base.typings";
 import { logger } from "./utility/logger.utils";
 import * as promClient from "prom-client";
 import cors from "cors";
+import { initialDocumentation } from "./typings/initialDcoumentation.typings";
 
 dotenv.config();
 
@@ -33,17 +34,17 @@ app.use(
     pathRewrite: { "^/user": "" },
     timeout: 5000,
     proxyTimeout: 5000,
+    selfHandleResponse: false,
     on: {
       proxyReq: (proxyReq, req: Request, res: Response) => {
         logger.info(`Proxying /user request`, {
-          // method: req.method,
-          // url: req.originalUrl,
-          // ip: req.ip,
-          // headers: req.headers,
-          // cookies: req.cookies,
-          // timestamp: new Date().toISOString(),
+          method: req.method,
+          url: req.originalUrl,
+          ip: req.ip,
+          cookies: req.cookies,
+          timestamp: new Date().toISOString(),
         });
-        return 
+        return;
       },
       proxyRes: (proxyRes, req: Request, res: Response) => {
         logger.info(`Response from /user service`, {
@@ -74,6 +75,9 @@ app.use(
     target: "http://monitor-service:3002",
     changeOrigin: true,
     pathRewrite: { "^/monitor": "" },
+    selfHandleResponse: false,
+    timeout: 5000,
+    proxyTimeout: 5000,
     on: {
       proxyReq: (proxyReq, req: AuthenticatedRequest, res: Response) => {
         if (req.userId) {
@@ -135,6 +139,10 @@ app.get("/metrics", async (req: Request, res: Response) => {
     res.status(500).send("Error fetching metrics");
     return;
   }
+});
+
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).send(initialDocumentation);
 });
 
 // Error handling middleware

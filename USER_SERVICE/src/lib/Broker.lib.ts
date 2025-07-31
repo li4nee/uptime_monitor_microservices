@@ -1,6 +1,7 @@
 import * as amqp from "amqplib";
 import { GlobalSettings } from "../globalSettings";
 import { MailOptions } from "../typings/base.typings";
+import { logger } from "../utility/logger.utils";
 class Broker {
   private connection?: amqp.ChannelModel;
   private channel?: amqp.Channel;
@@ -31,18 +32,6 @@ class Broker {
     }
   }
 
-  private async assertQueue(queue: string, durable: boolean = false): Promise<boolean> {
-    if (!this.channel) {
-      throw new Error("Channel not created. Call createChannel() first.");
-    }
-    try {
-      await this.channel.assertQueue(queue, { durable });
-      return true;
-    } catch (err) {
-      throw new Error("Failed to assert queue: " + (err as Error).message);
-    }
-  }
-
   private async assertExchange(exchange: string, type: string = "direct"): Promise<boolean> {
     if (!this.channel) {
       throw new Error("Channel not created. Call createChannel() first.");
@@ -55,41 +44,33 @@ class Broker {
     }
   }
 
-  private async bindQueue(queue: string, exchange: string, routingKey: string): Promise<boolean> {
-    if (!this.channel) {
-      throw new Error("Channel not created. Call createChannel() first.");
-    }
-    try {
-      await this.channel.bindQueue(queue, exchange, routingKey);
-      return true;
-    } catch (err) {
-      throw new Error("Failed to bind queue: " + (err as Error).message);
-    }
-  }
-
   async setupBroker(): Promise<void> {
     try {
       await this.createConnection();
       await this.createChannel();
       await this.assertExchange(this.exchangeName);
-      await this.assertQueue(this.emailQueue, true);
-      await this.bindQueue(this.emailQueue, this.exchangeName, this.routingKeyEmail);
     } catch (err) {
-      console.error("Error setting up RabbitMQ broker:", err);
+      logger.error("Failed to setup RabbitMQ broker", { error: err });
       throw new Error("Failed to setup RabbitMQ broker: " + (err as Error).message);
     }
   }
 
-  async sendEmail(data: MailOptions): Promise<boolean> {
+  async sendEmail(data: MailOptions): Promise<boolean | undefined> {
     if (!this.channel) {
       throw new Error("Channel not created. Call createChannel() first.");
     }
     try {
       const message = JSON.stringify(data);
-      this.channel.sendToQueue(this.emailQueue, Buffer.from(message), { persistent: true });
+      this.channel.publish(this.exchangeName, this.routingKeyEmail, Buffer.from(message), {
+        persistent: true,
+      });
       return true;
     } catch (err) {
-      throw new Error("Failed to send email: " + (err as Error).message);
+      logger.error("Failed to send email message to RabbitMQ", {
+        message: (err as Error).message,
+        stack: (err as Error).stack,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }

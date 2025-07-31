@@ -22,11 +22,24 @@ app.use(express.json());
 // Routes
 app.use("/auth", authRouter);
 
-app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+//Strict routing to ensure that paths are matched exactly and extra slashes are not ignored
+app.set("strict routing", true);
+app.use(
+  "/api-docs",
+  swaggerUI.serve,
+  swaggerUI.setup(swaggerSpec, {
+    swaggerOptions: {
+      url: "swagger.json",
+    },
+  }),
+);
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to the User Service API");
+// Also expose the JSON spec
+app.get("/api-docs/swagger.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
 });
+
 let collectDefaultMetrix = promClient.collectDefaultMetrics;
 collectDefaultMetrix({ register: promClient.register });
 app.get("/metrics", async (req: Request, res: Response) => {
@@ -48,7 +61,7 @@ app.get("/metrics", async (req: Request, res: Response) => {
 
 app.use(GlobalErrorHandler);
 
-app.listen(GlobalSettings.port,"0.0.0.0", () => {
+app.listen(GlobalSettings.port, "0.0.0.0", () => {
   logger.info(`User Service is running on port ${GlobalSettings.port}`);
   AppDataSource.initialize()
     .then(async () => {

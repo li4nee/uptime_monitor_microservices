@@ -137,6 +137,7 @@ services:
         condition: service_started
     networks:
       - internal
+      - public
 
 volumes:
   pgdata:

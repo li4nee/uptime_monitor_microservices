@@ -22,5 +22,4 @@ const GlobalSettings = {
     from: process.env.MAIL_USER || "random@gmail.com",
   },
 };
-
 export { GlobalSettings };

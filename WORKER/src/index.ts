@@ -27,7 +27,7 @@ app.get("/metrics", async (req: Request, res: Response) => {
     return;
   }
 });
-app.listen(3003,"0.0.0.0", (err) => {
+app.listen(3003, "0.0.0.0", (err) => {
   if (err) {
     throw new InternalServerError("Failed to start worker service: " + (err as Error).message);
   }

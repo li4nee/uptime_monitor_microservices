@@ -8,6 +8,10 @@ import { logger } from "../utility/logger.utils";
 
 export async function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    if (req.path.includes("/api-docs")) {
+      next();
+      return;
+    }
     const accessToken = req.cookies?.accessToken;
     const refreshToken = req.cookies?.refreshToken;
     const method = req.method;

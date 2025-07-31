@@ -12,10 +12,9 @@ const GlobalSettings = {
     routingKeyDiscord: process.env.RABBITMQ_ROUTING_KEY_DISCORD || "uptime_monitor_routing_key_discord",
   },
   mail: {
-    host: process.env.MAIL_HOST || "smtp.example.com",
-    user: process.env.MAIL_USER || "your_email@example.com",
-    pass: process.env.MAIL_PASS || "your_email_password",
-  },
+    host: process.env.MAIL_HOST,
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
+  }
 };
-
 export { GlobalSettings };

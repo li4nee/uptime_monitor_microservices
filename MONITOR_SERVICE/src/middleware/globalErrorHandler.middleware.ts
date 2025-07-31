@@ -28,5 +28,5 @@ export function GlobalErrorHandler(err: Error, req: Request, res: Response, next
   }
 
   logger.error("Unhandled error occurred", logDetails);
-  res.status(500).json({ message: "Oops, some unexpected error occurred", status: 500, path: req.url });
+  res.status(500).json({ message: err.message, status: 500, path: req.url });
 }

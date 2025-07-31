@@ -265,7 +265,7 @@ class MonitorServiceClass {
   }
 
   async getOneMonthOverview(query: GetOneMonthOverviewDto, userId: string) {
-    const { siteId, siteApiId, yearAndMonth, httpMethod } = query;
+    const { siteId, siteApiId, yearAndMonth} = query;
     if (!userId) throw new InvalidInputError("User ID is required to fetch one month overview");
     if (!siteId) throw new InvalidInputError("Site ID is required");
     if (!siteApiId) throw new InvalidInputError("Site API ID is required");
@@ -284,9 +284,6 @@ class MonitorServiceClass {
       .andWhere("siteApi.id = :siteApiId", { siteApiId })
       .andWhere("history.checkedAt BETWEEN :startDate AND :endDate", { startDate, endDate });
 
-    if (httpMethod) {
-      queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod });
-    }
     const results = await queryBuilder
       .select([
         `DATE_TRUNC('day', history.checkedAt) AS day`,
@@ -343,7 +340,6 @@ class MonitorServiceClass {
       siteId,
       siteApiId,
       yearAndMonth,
-      httpMethod,
       averageResponseTime,
       upCount,
       downCount,

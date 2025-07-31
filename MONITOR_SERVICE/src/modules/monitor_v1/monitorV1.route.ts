@@ -262,12 +262,12 @@ monitorV1Router.put("/registered-routes", Wrapper(MonitorController.updateRoutes
  *       - in: query
  *         name: page
  *         required: false
- *         description: Page number for pagination (starts from 1)
+ *         description: Page number for pagination (starts from 0)
  *         schema:
  *           type: integer
- *           minimum: 1
- *           default: 1
- *           example: 1
+ *           minimum: 0
+ *           default: 0
+ *           example: 3
  *       - in: query
  *         name: limit
  *         required: false
@@ -275,7 +275,7 @@ monitorV1Router.put("/registered-routes", Wrapper(MonitorController.updateRoutes
  *         schema:
  *           type: integer
  *           minimum: 1
- *           maximum: 100
+ *           maximum: 20
  *           default: 10
  *           example: 10
  *       - in: query

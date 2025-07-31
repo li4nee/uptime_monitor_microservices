@@ -1,6 +1,7 @@
 import * as amqp from "amqplib";
 import { GlobalSettings } from "../globalSettings";
 import { discordOptions, InternalServerError, MailOptions, slackOptions } from "../typings/base.type";
+import { logger } from "../utils/logger.utils";
 
 class MessageBrokerProducer {
   private connection?: amqp.ChannelModel;
@@ -8,9 +9,6 @@ class MessageBrokerProducer {
 
   private readonly url = GlobalSettings.rabbitMQ.url;
   private readonly exchangeName = GlobalSettings.rabbitMQ.exchange;
-  private readonly emailQueue = GlobalSettings.rabbitMQ.queueEmail;
-  private readonly slackQueue = GlobalSettings.rabbitMQ.queueSlack;
-  private readonly discordQueue = GlobalSettings.rabbitMQ.queueDiscord;
   private readonly routingKeyEmail = GlobalSettings.rabbitMQ.routingKeyEmail;
   private readonly routingKeySlack = GlobalSettings.rabbitMQ.routingKeySlack;
   private readonly routingKeyDiscord = GlobalSettings.rabbitMQ.routingKeyDiscord;
@@ -36,18 +34,6 @@ class MessageBrokerProducer {
     }
   }
 
-  async assertQueue(queue: string, durable: boolean = false): Promise<boolean> {
-    if (!this.channel) {
-      throw new InternalServerError("Channel not created. Call createChannel() first.");
-    }
-    try {
-      await this.channel.assertQueue(queue, { durable });
-      return true;
-    } catch (err) {
-      throw new InternalServerError("Failed to assert queue: " + (err as Error).message);
-    }
-  }
-
   async assertExchange(exchange: string, type: string = "direct"): Promise<boolean> {
     if (!this.channel) {
       throw new InternalServerError("Channel not created. Call createChannel() first.");
@@ -60,29 +46,12 @@ class MessageBrokerProducer {
     }
   }
 
-  async bindQueue(queue: string, exchange: string, routingKey: string): Promise<boolean> {
-    if (!this.channel) {
-      throw new InternalServerError("Channel not created. Call createChannel() first.");
-    }
-    try {
-      await this.channel.bindQueue(queue, exchange, routingKey);
-      return true;
-    } catch (err) {
-      throw new InternalServerError("Failed to bind queue: " + (err as Error).message);
-    }
-  }
-
   async setupBroker(): Promise<void> {
     try {
       await this.createConnection();
       await this.createChannel();
       await this.assertExchange(this.exchangeName);
-      await this.assertQueue(this.emailQueue, true);
-      await this.bindQueue(this.emailQueue, this.exchangeName, this.routingKeyEmail);
-      await this.assertQueue(this.slackQueue, true);
-      await this.bindQueue(this.slackQueue, this.exchangeName, this.routingKeySlack);
-      await this.assertQueue(this.discordQueue, true);
-      await this.bindQueue(this.discordQueue, this.exchangeName, this.routingKeyDiscord);
+      logger.info("RabbitMQ broker setup completed successfully in MONITOR_SERVICE");
     } catch (err) {
       throw new InternalServerError("Failed to setup message broker: " + (err as Error).message);
     }

@@ -20,7 +20,22 @@ app.use(express.json());
 
 app.use("/v1", attachProxiedUser, monitorV1Router);
 
-app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+app.set("strict routing", true);
+app.use(
+  "/api-docs",
+  swaggerUI.serve,
+  swaggerUI.setup(swaggerSpec, {
+    swaggerOptions: {
+      url: "swagger.json",
+    },
+  }),
+);
+
+// Also expose the JSON spec
+app.get("/api-docs/swagger.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
 
 let collectDefaultMetrix = promClient.collectDefaultMetrics;
 collectDefaultMetrix({ register: promClient.register });
@@ -43,7 +58,8 @@ app.get("/metrics", async (req: Request, res: Response) => {
 
 app.use(GlobalErrorHandler);
 
-app.listen(GlobalSettings.port,"0.0.0.0", () => {
+app.listen(GlobalSettings.port, "0.0.0.0", async () => {
+  getMessageBrokerProducer()
   logger.info(`Monitor Service listening on port ${GlobalSettings.port}`);
   getMessageBrokerProducer();
   AppDataSource.initialize()

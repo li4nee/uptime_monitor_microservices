@@ -17,9 +17,7 @@ export class MessageBrokerConsumer {
 
   async createConnection(): Promise<amqp.ChannelModel> {
     try {
-      logger.info("Connecting to RabbitMQ", { url: this.url });
       this.connection = await amqp.connect(this.url);
-      logger.info("Successfully connected to RabbitMQ");
       return this.connection;
     } catch (err) {
       logger.error("Failed to connect to RabbitMQ", { error: err });
@@ -34,9 +32,7 @@ export class MessageBrokerConsumer {
       throw new InternalServerError(msg);
     }
     try {
-      logger.info("Creating channel");
       this.channel = await this.connection.createChannel();
-      logger.info("Channel created successfully");
       return this.channel;
     } catch (err) {
       logger.error("Failed to create channel", { error: err });
@@ -51,9 +47,7 @@ export class MessageBrokerConsumer {
       throw new InternalServerError(msg);
     }
     try {
-      logger.info(`Asserting queue: ${queue}`, { durable });
       await this.channel.assertQueue(queue, { durable });
-      logger.info(`Queue asserted: ${queue}`);
       return true;
     } catch (err) {
       logger.error("Failed to assert queue", { queue, error: err });
@@ -61,15 +55,48 @@ export class MessageBrokerConsumer {
     }
   }
 
+  async bindQueue(queue: string, exchange: string, routingKey: string): Promise<boolean> {
+    if (!this.channel) {
+      const msg = "Channel not created. Call createChannel() first.";
+      logger.error(msg);
+      throw new InternalServerError(msg);
+    }
+    try {
+      await this.channel.bindQueue(queue, exchange, routingKey);
+      return true;
+    } catch (err) {
+      logger.error("Failed to bind queue", { queue, exchange, routingKey, error: err });
+      throw new InternalServerError("Failed to bind queue: " + (err as Error).message);
+    }
+  }
+
+  async assertExchange(exchange: string, type: string = "direct"): Promise<boolean> {
+    if (!this.channel) {
+      const msg = "Channel not created. Call createChannel() first.";
+      logger.error(msg);
+      throw new InternalServerError(msg);
+    }
+    try {
+      await this.channel.assertExchange(exchange, type, { durable: true });
+      return true;
+    } catch (err) {
+      logger.error("Failed to assert exchange", { exchange, type, error: err });
+      throw new InternalServerError("Failed to assert exchange: " + (err as Error).message);
+    }
+  }
+
   async setupBroker(): Promise<void> {
     try {
-      logger.info("Setting up message broker...");
       await this.createConnection();
       await this.createChannel();
+      await this.assertExchange(GlobalSettings.rabbitMQ.exchange);
       await this.assertQueue(this.queueEmail, true);
       await this.assertQueue(this.queueSlack, true);
       await this.assertQueue(this.queueDiscord, true);
-      logger.info("Message broker setup complete");
+      await this.bindQueue(this.queueEmail, GlobalSettings.rabbitMQ.exchange, GlobalSettings.rabbitMQ.routingKeyEmail);
+      await this.bindQueue(this.queueSlack, GlobalSettings.rabbitMQ.exchange, GlobalSettings.rabbitMQ.routingKeySlack);
+      await this.bindQueue(this.queueDiscord, GlobalSettings.rabbitMQ.exchange, GlobalSettings.rabbitMQ.routingKeyDiscord);
+      await this.consume();
     } catch (err) {
       logger.error("Failed to setup message broker", { error: err });
       throw new InternalServerError("Failed to setup message broker: " + (err as Error).message);
@@ -86,6 +113,7 @@ export class MessageBrokerConsumer {
     logger.info("Starting message consumption...");
 
     await this.channel.consume(this.queueEmail, async (msg) => {
+      console.log("Consuming email messages");
       if (msg) {
         try {
           const content: MailOptions = JSON.parse(msg.content.toString());

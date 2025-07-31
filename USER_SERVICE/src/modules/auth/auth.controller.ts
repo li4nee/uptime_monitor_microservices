@@ -12,6 +12,8 @@ import {
 import { AuthService } from "./auth.service";
 import { removeCookie, setCookie } from "../../utility/base.utils";
 import { AuthenticatedRequest, InvalidInputError } from "../../typings/base.typings";
+import { getBrokerInstance } from "../../lib/Broker.lib";
+import { GlobalSettings } from "../../globalSettings";
 
 class AuthControllerClass {
   private userService = new AuthService();
@@ -24,7 +26,6 @@ class AuthControllerClass {
   }
 
   async login(req: Request, res: Response) {
-    console.log("Login request received");
     let data: loginDto = await loginValidationSchema.validate(req.body);
     let result = await this.userService.login(data);
     setCookie(res, "refreshToken", result.data.refreshToken, 60 * 60 * 24 * 7 * 1000);
@@ -70,6 +71,16 @@ class AuthControllerClass {
     let result = await this.userService.verifyEmail(body.userId, body.otp);
     res.status(200).json(result);
     return;
+  }
+
+  // HAVE TO ADD RATE LIMIT HERE
+  async sendVerificationMail(req:Request,res:Response)
+  {
+    let body:string = req.body.email
+    if(!body)
+      throw new InvalidInputError("Email is required")
+    let result = await this.userService.sendVerificationMail(body)
+    return result
   }
 }
 

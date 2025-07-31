@@ -2,7 +2,6 @@ import { createLogger, format } from "winston";
 import LokiTransport from "winston-loki";
 import winston from "winston";
 
-
 const options = {
   defaultMeta: { service: "MONITOR_SERVICE" },
   format: winston.format.combine(winston.format.timestamp(), winston.format.errors({ stack: true }), winston.format.splat(), winston.format.json()),

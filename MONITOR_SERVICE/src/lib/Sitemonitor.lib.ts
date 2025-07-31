@@ -65,9 +65,7 @@ export class SiteMonitorService {
           }
 
           return site.siteApis.map((api) =>
-            this.queueSiteApiJob(site, api).catch((err) =>
-              logger.error(`Failed to queue job for siteApi ${api.id}`, { error: err }),
-            ),
+            this.queueSiteApiJob(site, api).catch((err) => logger.error(`Failed to queue job for siteApi ${api.id}`, { error: err })),
           );
         });
 
@@ -116,9 +114,7 @@ export class SiteMonitorService {
         removeOnFail: true,
         jobId: `${site.id}-${siteApi.id}`,
       })
-      .then(() =>
-        logger.info(`Queued job for siteApi ${siteApi.id} of site ${site.id}`),
-      )
+      .then(() => logger.info(`Queued job for siteApi ${siteApi.id} of site ${site.id}`))
       .catch((error) => {
         logger.error(`Failed to add job for siteApi ${siteApi.id}`, { error });
       });

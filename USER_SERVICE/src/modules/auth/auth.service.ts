@@ -47,6 +47,10 @@ export class AuthService {
       logger.warn("User with this email does not exist", { email: body.email });
       throw new InvalidInputError("User with this email does not exist", true);
     }
+    if (!user.emailVerified) {
+      logger.warn("Login attempt for unverified user", { email: body.email, userId: user.id });
+      throw new InvalidInputError("Email not verified", true);
+    }
     const isPasswordValid = await bcrypt.compare(body.password, user.password);
     if (!isPasswordValid) {
       logger.warn("Invalid password for user", { email: body.email, userId: user.id });
@@ -158,11 +162,35 @@ export class AuthService {
     return new DefaultResponse(200, "Email verified successfully");
   }
 
+  async sendVerificationMail(email:string)
+  {
+    const user = await this.checkIfUserExistsAndReturnUser(email, "email");
+    if (!user) {
+      logger.warn("User with this email does not exist", { email });
+      throw new InvalidInputError("User with this email does not exist", true);
+    }
+    if (user.emailVerified) {
+      logger.warn("Email already verified", { email });
+      throw new InvalidInputError("Email already verified", true);
+    }
+    const OTP = generateOtp();
+    await LoginStore.setOtpToken(user.id, OTP, 60 * 5 * 1000);
+    const mailData = {
+      to: user.email,
+      from: GlobalSettings.mail.from,
+      subject: "Email Verification",
+      text: `Your OTP for email verification is ${OTP}`,
+    };
+    await this.broker.sendEmail(mailData);
+    logger.info("Verification mail sent successfully", { email, userId: user.id });
+    return new DefaultResponse(200, "Verification mail sent successfully");
+  }
+
   private async checkIfUserExistsAndReturnUser(data: string, type: "email" | "id") {
     const whereClause = type === "email" ? { email: data } : { id: data };
     const user = await this.userModel.findOne({
       where: whereClause,
-      select: { id: true, password: true, email: true },
+      select: { id: true, password: true, email: true,emailVerified:true },
     });
     return user;
   }
