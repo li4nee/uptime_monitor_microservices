@@ -54,6 +54,12 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *                 message:
  *                   type: string
  *                   example: User created successfully, please verify your email
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                      userId:
+ *                          type: string
+ *                          description: The ID of the newly created user
  *       400:
  *         description: Validation error or user already exists
  *
@@ -104,7 +110,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *       400:
  *         description: Invalid credentials or validation error
  *
- * /auth/logout:
+ * /user/auth/logout:
  *   post:
  *     summary: Log out the current user
  *     tags: [Auth]
@@ -228,12 +234,12 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *           schema:
  *             type: object
  *             required:
- *               - userId
+ *               - email
  *               - otp
  *             properties:
- *               userId:
+ *               email:
  *                 type: string
- *                 description: The ID of the user to verify
+ *                 description: The email of the user to verify
  *               otp:
  *                 type: string
  *                 description: One-time password for verification
@@ -278,5 +284,5 @@ authRouter.get("/profile", authenticate, Wrapper(AuthController.getUser.bind(Aut
 authRouter.patch("/email", authenticate, Wrapper(AuthController.changeEmail.bind(AuthController)));
 authRouter.patch("/password", authenticate, Wrapper(AuthController.changePassword.bind(AuthController)));
 authRouter.post("/verify-email", Wrapper(AuthController.verifyEmail.bind(AuthController)));
-authRouter.get("/send-verification-mail", Wrapper(AuthController.sendVerificationMail.bind(AuthController)));
+authRouter.post("/send-verification-mail", Wrapper(AuthController.sendVerificationMail.bind(AuthController)));
 export { authRouter };

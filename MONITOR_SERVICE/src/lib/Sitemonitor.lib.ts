@@ -58,6 +58,7 @@ export class SiteMonitorService {
 
         logger.info(`Monitoring page ${page}, sites found: ${sites.length}`);
 
+        // [[]] ko nikalera [] ma rakhcha esle
         const allJobPromises = sites.flatMap((site) => {
           if (!site.siteApis?.length) {
             logger.warn(`Site ${site.id} has no active APIs`);
@@ -69,7 +70,12 @@ export class SiteMonitorService {
           );
         });
 
-        await Promise.all(allJobPromises);
+        const chunkSize = 20;
+        // Process jobs in chunks to avoid redis lai flood garna ekai choti thullo load le
+        for (let i = 0; i < allJobPromises.length; i += chunkSize) {
+          const chunk = allJobPromises.slice(i, i + chunkSize)
+          await Promise.all(chunk);
+        }
         page++;
       }
 
@@ -112,7 +118,7 @@ export class SiteMonitorService {
         },
         removeOnComplete: true,
         removeOnFail: true,
-        jobId: `${site.id}-${siteApi.id}`,
+        jobId: `${site.id}-${siteApi.id}-${Date.now()}`, // Unique job ID to prevent duplicates
       })
       .then(() => logger.info(`Queued job for siteApi ${siteApi.id} of site ${site.id}`))
       .catch((error) => {

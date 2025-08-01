@@ -68,7 +68,7 @@ class AuthControllerClass {
   // HAVE TO ADD RATE LIMIT HERE
   async verifyEmail(req: Request, res: Response) {
     let body: verifyEmailDto = await verifyEmailValidationSchema.validate(req.body);
-    let result = await this.userService.verifyEmail(body.userId, body.otp);
+    let result = await this.userService.verifyEmail(body.email, body.otp);
     res.status(200).json(result);
     return;
   }
@@ -78,7 +78,8 @@ class AuthControllerClass {
     let body: string = req.body.email;
     if (!body) throw new InvalidInputError("Email is required");
     let result = await this.userService.sendVerificationMail(body);
-    return result;
+    res.status(200).json(result);
+    return;
   }
 }
 

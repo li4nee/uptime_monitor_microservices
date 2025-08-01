@@ -7,8 +7,6 @@ export function GlobalErrorHandler(err: Error, req: Request, res: Response, next
   const logDetails = {
     method: req.method,
     url: req.originalUrl,
-    headers: req.headers,
-    cookies: req.cookies,
     ip: req.ip,
     timestamp: new Date().toISOString(),
     errorMessage: err.message,

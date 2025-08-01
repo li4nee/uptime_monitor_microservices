@@ -41,7 +41,6 @@ app.use(
           method: req.method,
           url: req.originalUrl,
           ip: req.ip,
-          cookies: req.cookies,
           timestamp: new Date().toISOString(),
         });
         return;
@@ -49,7 +48,6 @@ app.use(
       proxyRes: (proxyRes, req: Request, res: Response) => {
         logger.info(`Response from /user service`, {
           statusCode: proxyRes.statusCode,
-          headers: proxyRes.headers,
           timestamp: new Date().toISOString(),
           url: req.originalUrl,
           method: req.method,
@@ -87,8 +85,6 @@ app.use(
             method: req.method,
             url: req.originalUrl,
             ip: req.ip,
-            headers: req.headers,
-            cookies: req.cookies,
             timestamp: new Date().toISOString(),
           });
           proxyReq.setHeader("x-user-id-from-proxy", req.userId);
@@ -98,7 +94,6 @@ app.use(
       proxyRes: (proxyRes, req: AuthenticatedRequest, res: Response) => {
         logger.info(`Response from /monitor service`, {
           statusCode: proxyRes.statusCode,
-          headers: proxyRes.headers,
           userId: req.userId,
           role: req.role,
           timestamp: new Date().toISOString(),

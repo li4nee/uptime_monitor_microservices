@@ -375,7 +375,6 @@ class MonitorServiceClass {
         "siteApi.id",
         "siteApi.path",
         "siteApi.httpMethod",
-        "siteApi.notification",
         "siteApi.isActive",
         "siteApi.priority",
       ])

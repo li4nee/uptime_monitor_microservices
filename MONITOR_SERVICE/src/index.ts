@@ -12,6 +12,7 @@ import { swaggerSpec } from "./swagger.config";
 import { GlobalErrorHandler } from "./middleware/globalErrorHandler.middleware";
 import { logger } from "./utils/logger.utils";
 import * as promClient from "prom-client";
+import { scheduleMonitorJob } from "./lib/queue/jobSchedularCron.queue";
 
 dotenv.config();
 
@@ -60,8 +61,8 @@ app.use(GlobalErrorHandler);
 
 app.listen(GlobalSettings.port, "0.0.0.0", async () => {
   getMessageBrokerProducer();
+  scheduleMonitorJob();
   logger.info(`Monitor Service listening on port ${GlobalSettings.port}`);
-  getMessageBrokerProducer();
   AppDataSource.initialize()
     .then(async () => {
       logger.info("Monitor Service DB connected");
