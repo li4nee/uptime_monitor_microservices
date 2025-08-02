@@ -73,7 +73,7 @@ export class SiteMonitorService {
         const chunkSize = 20;
         // Process jobs in chunks to avoid redis lai flood garna ekai choti thullo load le
         for (let i = 0; i < allJobPromises.length; i += chunkSize) {
-          const chunk = allJobPromises.slice(i, i + chunkSize)
+          const chunk = allJobPromises.slice(i, i + chunkSize);
           await Promise.all(chunk);
         }
         page++;

@@ -76,7 +76,7 @@ class LoginGlobalStore {
 
   setOtpToken = async (token: string, email: string, time: number) => {
     await this.removeOtpToken(email, token);
-    await this.setToken("otp_store",email, token, time);
+    await this.setToken("otp_store", email, token, time);
   };
 
   verifyOtpToken = async (email: string, otp: string) => {

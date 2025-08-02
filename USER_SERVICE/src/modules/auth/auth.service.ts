@@ -35,9 +35,9 @@ export class AuthService {
       subject: "Email Verification",
       text: `Your OTP for email verification is ${OTP}`,
     };
-    await Promise.all([LoginStore.setOtpToken(OTP,user.email, 60 * 5 * 1000), this.broker.sendEmail(mailData)]);
+    await Promise.all([LoginStore.setOtpToken(OTP, user.email, 60 * 5 * 1000), this.broker.sendEmail(mailData)]);
     logger.info("User created successfully, OTP sent", { email: body.email, userId: user.id });
-    return new DefaultResponse(201, "User created successfully, please verify your email", { email : body.email});
+    return new DefaultResponse(201, "User created successfully, please verify your email", { email: body.email });
   }
 
   async login(body: loginDto) {
@@ -127,7 +127,7 @@ export class AuthService {
     user.emailVerified = false;
     await this.userModel.save(user);
     const OTP = generateOtp();
-    await LoginStore.setOtpToken(OTP,user.email, 60 * 5 * 1000);
+    await LoginStore.setOtpToken(OTP, user.email, 60 * 5 * 1000);
     const mailData = {
       to: body.newEmail,
       from: GlobalSettings.mail.from,
@@ -136,7 +136,7 @@ export class AuthService {
     };
     await this.broker.sendEmail(mailData);
     logger.info("Email changed successfully and Otp sent", { userId, newEmail: body.newEmail });
-    return new DefaultResponse(200, "Email changed successfully.Please verify your email.",{email:user.email});
+    return new DefaultResponse(200, "Email changed successfully.Please verify your email.", { email: user.email });
   }
 
   async verifyEmail(email: string, otp: string) {
@@ -147,18 +147,18 @@ export class AuthService {
     }
     const isOtpValid = await LoginStore.verifyOtpToken(email, otp);
     if (!isOtpValid) {
-      logger.warn("Invalid or expired OTP for email verification", {email, otp });
+      logger.warn("Invalid or expired OTP for email verification", { email, otp });
       throw new InvalidInputError("Invalid or expired OTP", true);
     }
-    let user = await this.userModel.findOne({ where: {email }, select: { id: true, emailVerified: true } });
+    let user = await this.userModel.findOne({ where: { email }, select: { id: true, emailVerified: true } });
     if (!user) {
-      logger.warn("User not found while verifying email", { email});
+      logger.warn("User not found while verifying email", { email });
       throw new InvalidInputError("User not found");
     }
     user.emailVerified = true;
     await this.userModel.save(user);
     await LoginStore.removeOtpToken(email, otp);
-    logger.info("Email verified successfully", { email});
+    logger.info("Email verified successfully", { email });
     return new DefaultResponse(200, "Email verified successfully");
   }
 
@@ -173,17 +173,17 @@ export class AuthService {
       throw new InvalidInputError("Email already verified", true);
     }
     const OTP = generateOtp();
-    await LoginStore.setOtpToken(OTP,user.email, 60 * 5 * 1000); // Store OTP for 5 minutes
+    await LoginStore.setOtpToken(OTP, user.email, 60 * 5 * 1000); // Store OTP for 5 minutes
     const mailData = {
       to: user.email,
       from: GlobalSettings.mail.from,
       subject: "Email Verification",
       text: `Your OTP for email verification is ${OTP}`,
     };
-    console.log(OTP)
+    console.log(OTP);
     await this.broker.sendEmail(mailData);
     logger.info("Verification mail sent successfully", { email, userId: user.id });
-    return new DefaultResponse(200, "Verification mail sent successfully",{email: user.email});
+    return new DefaultResponse(200, "Verification mail sent successfully", { email: user.email });
   }
 
   private async checkIfUserExistsAndReturnUser(data: string, type: "email" | "id") {
