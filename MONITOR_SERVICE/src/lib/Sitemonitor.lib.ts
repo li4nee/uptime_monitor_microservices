@@ -16,7 +16,7 @@ export class SiteMonitorService {
   async monitorTheSites(): Promise<void> {
     let page = 0;
     try {
-      logger.info("Starting site monitoring process");
+      logger.info("Site monitoring started");
 
       while (true) {
         const sites = await this.siteModel.find({
@@ -30,12 +30,14 @@ export class SiteMonitorService {
             url: true,
             userId: true,
             notification: true,
+            createdAt: true,
             siteApis: {
               id: true,
               body: true,
               headers: true,
               httpMethod: true,
               maxResponseTime: true,
+              maxNumberOfAttempts: true,
               notificationSetting: {
                 emailEnabled: true,
                 emailAddress: true,
@@ -51,37 +53,27 @@ export class SiteMonitorService {
           },
         });
 
-        if (!sites?.length) {
-          logger.info(`No more sites to monitor after page ${page}`);
-          break;
-        }
+        if (!sites?.length) break;
 
-        logger.info(`Monitoring page ${page}, sites found: ${sites.length}`);
-
-        // [[]] ko nikalera [] ma rakhcha esle
         const allJobPromises = sites.flatMap((site) => {
-          if (!site.siteApis?.length) {
-            logger.warn(`Site ${site.id} has no active APIs`);
-            return [];
-          }
-
+          if (!site.siteApis?.length) return [];
           return site.siteApis.map((api) =>
-            this.queueSiteApiJob(site, api).catch((err) => logger.error(`Failed to queue job for siteApi ${api.id}`, { error: err })),
+            this.queueSiteApiJob(site, api).catch((err) =>
+              logger.error(`Failed to queue siteApi ${api.id}`, { siteId: site.id, error: err }),
+            ),
           );
         });
 
         const chunkSize = 20;
-        // Process jobs in chunks to avoid redis lai flood garna ekai choti thullo load le
         for (let i = 0; i < allJobPromises.length; i += chunkSize) {
-          const chunk = allJobPromises.slice(i, i + chunkSize);
-          await Promise.all(chunk);
+          await Promise.all(allJobPromises.slice(i, i + chunkSize));
         }
         page++;
       }
 
-      logger.info("Completed monitoring all sites");
+      logger.info("Site monitoring completed");
     } catch (error) {
-      logger.error("Error monitoring sites", { error });
+      logger.error("Site monitoring failed", { error });
     }
   }
 
@@ -96,6 +88,7 @@ export class SiteMonitorService {
       maxResponseTime: siteApi.maxResponseTime,
       priority: siteApi.priority,
       siteNotification: site.notification,
+      maxNumberOfAttempts:siteApi.maxNumberOfAttempts || 3,
       notification: {
         emailEnabled: siteApi.notificationSetting?.emailEnabled,
         emailAddress: siteApi.notificationSetting?.emailAddress,
@@ -109,20 +102,16 @@ export class SiteMonitorService {
       userId: site.userId,
     };
 
-    await this.siteMonitorQueue
-      .add("monitor-site-api", jobData, {
-        attempts: siteApi.maxNumberOfAttempts || 3,
-        backoff: {
-          type: "exponential",
-          delay: 1000,
-        },
-        removeOnComplete: true,
-        removeOnFail: true,
-        jobId: `${site.id}-${siteApi.id}-${Date.now()}`, // Unique job ID to prevent duplicates
-      })
-      .then(() => logger.info(`Queued job for siteApi ${siteApi.id} of site ${site.id}`))
-      .catch((error) => {
-        logger.error(`Failed to add job for siteApi ${siteApi.id}`, { error });
-      });
+    await this.siteMonitorQueue.add("monitor-site-api", jobData, {
+      attempts: siteApi.maxNumberOfAttempts || 3,
+      backoff: {
+        type: "exponential",
+        delay: 1000,
+      },
+      removeOnComplete: true,
+      removeOnFail: true,
+      jobId: `${site.id}-${siteApi.id}-${Date.now()}`,
+    });
   }
 }
+

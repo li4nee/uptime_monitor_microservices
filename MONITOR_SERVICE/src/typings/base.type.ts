@@ -34,6 +34,7 @@ export interface SiteMoniorDTO {
   priority: SITE_PRIORITY;
   userId: string;
   siteNotification?: boolean;
+  maxNumberOfAttempts?: number;
   notification?: {
     emailEnabled?: boolean;
     emailAddress?: string;

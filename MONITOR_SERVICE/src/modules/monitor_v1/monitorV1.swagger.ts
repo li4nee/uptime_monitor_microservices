@@ -1,5 +1,4 @@
 import { HTTP_METHOD, NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../../typings/base.type";
-
 export const resgisterSiteMonitorSwagger = {
   type: "object",
   required: ["url", "siteApis"],
@@ -12,7 +11,7 @@ export const resgisterSiteMonitorSwagger = {
     },
     siteNotification: {
       type: "boolean",
-      description: "Controls the entire site notification. If it's off, then no notification will be sent for any of the APIs.",
+      description: "Controls the entire site notification. If it's off, no notification will be sent for any of the APIs.",
       default: true,
     },
     siteApis: {
@@ -31,12 +30,12 @@ export const resgisterSiteMonitorSwagger = {
             type: "string",
             description: "HTTP method to use for the API",
             enum: Object.values(HTTP_METHOD),
-            default: HTTP_METHOD.GET,
           },
           headers: {
             type: "object",
             description: "Optional headers to include in the request",
             default: {},
+            example: { Authorization: "Bearer token" },
           },
           body: {
             type: "object",
@@ -56,24 +55,50 @@ export const resgisterSiteMonitorSwagger = {
           priority: {
             type: "number",
             description: "Priority of the API",
-            enum: [1, 2, 3, 4],
+            enum: Object.values(SITE_PRIORITY),
             default: SITE_PRIORITY.MEDIUM,
           },
-          notification: {
+          isActive: {
             type: "boolean",
-            description: "Enable/disable notifications for this API",
+            description: "Enable/disable monitoring for this API",
             default: true,
+          },
+          emailEnabled: {
+            type: "boolean",
+            description: "Enable email notifications for this API",
+            default: false,
+          },
+          emailAddress: {
+            type: "string",
+            format: "email",
+            description: "Email address for notifications",
+            example: "user@example.com",
+          },
+          discordEnabled: {
+            type: "boolean",
+            description: "Enable Discord notifications for this API",
+            default: false,
+          },
+          discordWebhook: {
+            type: "string",
+            description: "Discord webhook URL for notifications",
+            example: "https://discord.com/api/webhooks/...",
+          },
+          slackEnabled: {
+            type: "boolean",
+            description: "Enable Slack notifications for this API",
+            default: false,
+          },
+          slackWebhook: {
+            type: "string",
+            description: "Slack webhook URL for notifications",
+            example: "https://hooks.slack.com/services/...",
           },
           notificationFrequency: {
             type: "string",
             description: "How often to send notifications",
             enum: Object.values(NOTIFICATION_FREQUENCY),
             default: NOTIFICATION_FREQUENCY.ONCE,
-          },
-          isActive: {
-            type: "boolean",
-            description: "Enable/disable monitoring for this API",
-            default: true,
           },
         },
       },
@@ -91,6 +116,7 @@ export const resgisterSiteMonitorSwagger = {
     },
   },
 };
+
 
 export const GetMonitoringRouteSwagger = {
   type: "object",

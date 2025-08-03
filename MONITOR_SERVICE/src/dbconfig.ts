@@ -2,13 +2,17 @@ import { DataSource, DataSourceOptions } from "typeorm";
 import { createClient, RedisClientType } from "redis";
 import { GlobalSettings } from "./globalSettings";
 import Redis from "ioredis";
+import { Site } from "./entity/site.entity";
+import { SiteApi } from "./entity/siteApi.entity";
+import { SiteMonitoringHistory } from "./entity/siteMonitoringHistory.entity";
+import { siteNotificationSetting } from "./entity/siteNotificationSetting.entity";
 
 const dataStoreOptions: DataSourceOptions = {
   type: "postgres",
   url: GlobalSettings.database.url,
   synchronize: true,
   logging: false,
-  entities: [__dirname + "/entity/**/*.entity.{js,ts}"],
+  entities: [Site,SiteApi,SiteMonitoringHistory,siteNotificationSetting],
   migrations: [__dirname + "/migrations/**/*.{js,ts}"],
   extra: {
     connectionLimit: 25,
@@ -37,4 +41,7 @@ export const connectToRedis = async (): Promise<RedisClientType> => {
   return redisClient;
 };
 
-export let IoRedisClientForBullMQ = new Redis(GlobalSettings.redis.url);
+export let IoRedisClientForBullMQ = new Redis(GlobalSettings.redis.url,{
+  maxRetriesPerRequest: null, // Disable automatic retries
+  enableReadyCheck: true, // Enable ready check to ensure the client is ready before use
+});

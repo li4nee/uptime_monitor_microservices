@@ -13,7 +13,6 @@ import { GlobalErrorHandler } from "./middleware/globalErrorHandler.middleware";
 import { logger } from "./utils/logger.utils";
 import * as promClient from "prom-client";
 import { scheduleMonitorJob } from "./lib/queue/jobSchedularCron.queue";
-
 dotenv.config();
 
 const app = express();
@@ -61,7 +60,6 @@ app.use(GlobalErrorHandler);
 
 app.listen(GlobalSettings.port, "0.0.0.0", async () => {
   getMessageBrokerProducer();
-  scheduleMonitorJob();
   logger.info(`Monitor Service listening on port ${GlobalSettings.port}`);
   AppDataSource.initialize()
     .then(async () => {
@@ -73,6 +71,10 @@ app.listen(GlobalSettings.port, "0.0.0.0", async () => {
         await AppDataSource.runMigrations();
         logger.info("Migrations completed.");
       }
+      await scheduleMonitorJob();
+      await import("./lib/workers/jobSchedularCron.worker");
+      await import("./lib/workers/SiteMonitorWorker.worker");
+      await import("./lib/workers/SaveMonitoringHistory.worker");
     })
     .catch((error) => {
       logger.error("DB connection error", {

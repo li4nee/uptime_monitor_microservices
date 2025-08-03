@@ -9,16 +9,6 @@ export function attachProxiedUser(req: Request, res: Response, next: NextFunctio
     const userRole = req.headers["x-user-role-from-proxy"] as ROLE;
     if (userId) authReq.userId = userId;
     if (userRole) authReq.role = userRole;
-
-    logger.info("Attached proxied user to request", {
-      method: req.method,
-      url: req.originalUrl,
-      ip: req.ip,
-      userId,
-      userRole,
-      timestamp: new Date().toISOString(),
-    });
-
     next();
   } catch (error) {
     logger.error("Error in attachProxiedUser middleware", {
