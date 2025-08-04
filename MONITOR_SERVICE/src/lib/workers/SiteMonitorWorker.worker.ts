@@ -6,9 +6,11 @@ import { SiteHistorySavingQueue } from "../queue/saveHistoryToDb.queue";
 import { getMessageBrokerProducer } from "../Broker.lib";
 import { logger } from "../../utils/logger.utils";
 import { IoRedisClientForBullMQ } from "../../dbconfig";
+import { SiteApiModel } from "../../repo/siteApi.repo";
 
 class SiteMonitorWorker {
   private messageBrokerProducer = getMessageBrokerProducer();
+  private readonly siteApiModel = SiteApiModel
   private worker: Worker;
 
   constructor() {
@@ -20,7 +22,7 @@ class SiteMonitorWorker {
       {
         connection: IoRedisClientForBullMQ,
         concurrency: 5,
-      }
+      },
     );
 
     this.worker.on("completed", (job) => this.handleJobCompleted(job));
@@ -38,10 +40,15 @@ class SiteMonitorWorker {
 
   private async handleJobFailed(job: Job<SiteMoniorDTO> | undefined, err: Error | undefined) {
     if (!job) return;
-    logger.error(`Job ${job.id} failed with attempt ${job.attemptsMade+1}`);
-    if (job.attemptsMade + 1 < job.opts.attempts!) 
-      return;
-    const history = this.createHistoryFromJob(job, "DOWN", job.returnvalue?.statusCode || 0, job.returnvalue?.responseTime || 0, err?.message || "Unknown error");
+    logger.error(`Job ${job.id} failed with attempt ${job.attemptsMade + 1}`);
+    if (job.attemptsMade + 1 < job.opts.attempts!) return;
+    const history = this.createHistoryFromJob(
+      job,
+      "DOWN",
+      job.returnvalue?.statusCode || 0,
+      job.returnvalue?.responseTime || 0,
+      err?.message || "Unknown error",
+    );
     await this.saveHistory(history, job?.id, true);
   }
 
@@ -50,7 +57,7 @@ class SiteMonitorWorker {
     status: "UP" | "DOWN",
     statusCode: number,
     responseTime: number,
-    errorLog?: string
+    errorLog?: string,
   ): SiteMonitoringHistory {
     const { data } = job;
     const history = new SiteMonitoringHistory();
@@ -64,8 +71,7 @@ class SiteMonitorWorker {
     history.httpMethod = data.httpMethod;
     history.headers = data.headers || {};
     history.body = data.body || {};
-    if(errorLog) 
-      history.errorLog = errorLog;
+    if (errorLog) history.errorLog = errorLog;
     history.attemptNumber = job.attemptsMade + 1;
 
     return history;
@@ -82,7 +88,7 @@ class SiteMonitorWorker {
 
   private async processJob(job: Job<SiteMoniorDTO>): Promise<void> {
     const data = job.data;
-    logger.info(`🔍 Processing job ${job.id} for site ${data.url}`);
+    logger.info(`Processing job ${job.id} for site ${data.url}`);
 
     const axiosConfig: AxiosRequestConfig = {
       url: data.url,
@@ -102,22 +108,30 @@ class SiteMonitorWorker {
       const isUp = statusCode >= 200 && statusCode < 400 && responseTime <= (data.maxResponseTime || 5000);
       const isSlow = statusCode >= 200 && statusCode < 400 && !isUp;
 
-      logger.info(`🌐 Site ${data.url} responded with ${statusCode} in ${responseTime.toFixed(2)}ms`);
+      logger.info(`Site ${data.url} responded with ${statusCode} in ${responseTime.toFixed(2)}ms`);
 
-      if (!isUp && data.notification && this.shouldSendNotification(data.notification.lastSentNotificationAt, data.notification.notificationFrequency)) {
-        logger.info(`📣 Sending alert for ${data.url}`);
-        await this.sendNotifications(data, isUp, isSlow);
+      if (!isUp && data.notification) {
+        const shouldSend = this.shouldSendNotification(data.notification.lastSentNotificationAt, data.notification.notificationFrequency);
+
+        if (shouldSend) {
+          logger.info(`Sending alert for ${data.url}`);
+          await this.sendNotifications(data, isUp, isSlow);
+          await this.siteApiModel.update({id:data.siteApiId},{
+            notificationSetting:{
+              lastNotificationSentAt: new Date(),
+            }
+          })
+        } else {
+          logger.info(`Skipping notification for ${data.url} due to frequency limit`);
+        }
       }
     } catch (error: any) {
-      logger.error(`💥 Error processing site ${data.url}: ${error?.message || "Unknown error"}`);
-      throw error;
+      logger.error(`Error processing site ${data.url}: ${error?.message || "Unknown error"}`);
+      throw error; 
     }
   }
 
-  private shouldSendNotification(
-    lastSent: Date | null | undefined,
-    frequency: NOTIFICATION_FREQUENCY | undefined
-  ): boolean {
+  private shouldSendNotification(lastSent: Date | null | undefined, frequency: NOTIFICATION_FREQUENCY | undefined): boolean {
     if (!frequency || frequency === NOTIFICATION_FREQUENCY.NONE) return false;
     if (!lastSent) return true;
 
@@ -157,9 +171,7 @@ class SiteMonitorWorker {
   }
 
   private async sendEmailNotification(data: SiteMoniorDTO, isSlow: boolean) {
-    const subject = isSlow
-      ? `⚠️ [WARNING] ${data.url} is SLOW`
-      : `🚨 [ALERT] ${data.url} is DOWN`;
+    const subject = isSlow ? `[WARNING] ${data.url} is SLOW` : `[ALERT] ${data.url} is DOWN`;
     const statusMsg = isSlow ? "Slow Response Time" : "Unreachable";
 
     const body = `
@@ -168,9 +180,7 @@ class SiteMonitorWorker {
         <p><strong>Site:</strong> ${data.url}</p>
         <p>Status: <strong>${statusMsg}</strong></p>
         <p>${
-          isSlow
-            ? "Your site is responding slower than expected. Investigate performance."
-            : "Your site is currently down. Please check immediately."
+          isSlow ? "Your site is responding slower than expected. Investigate performance." : "Your site is currently down. Please check immediately."
         }</p>
         <hr/>
         <small>This is an automated alert from SiteMonitor.</small>
@@ -189,8 +199,8 @@ class SiteMonitorWorker {
 
   private async sendDiscordNotification(data: SiteMoniorDTO, isSlow: boolean) {
     const msg = isSlow
-      ? `⚠️ **Performance Alert!**\n🌐 **URL:** ${data.url}\n🐢 **Status:** Slow`
-      : `🚨 **Down Alert!**\n🌐 **URL:** ${data.url}\n❌ **Status:** Unreachable`;
+      ? ` **Performance Alert!**\n **URL:** ${data.url}\n **Status:** Slow`
+      : `**Down Alert!**\n **URL:** ${data.url}\n **Status:** Unreachable`;
 
     await this.messageBrokerProducer.sendDiscordMessage(data.notification!.discordWebhook!, msg);
   }

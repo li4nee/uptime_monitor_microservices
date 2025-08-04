@@ -58,9 +58,7 @@ export class SiteMonitorService {
         const allJobPromises = sites.flatMap((site) => {
           if (!site.siteApis?.length) return [];
           return site.siteApis.map((api) =>
-            this.queueSiteApiJob(site, api).catch((err) =>
-              logger.error(`Failed to queue siteApi ${api.id}`, { siteId: site.id, error: err }),
-            ),
+            this.queueSiteApiJob(site, api).catch((err) => logger.error(`Failed to queue siteApi ${api.id}`, { siteId: site.id, error: err })),
           );
         });
 
@@ -88,7 +86,7 @@ export class SiteMonitorService {
       maxResponseTime: siteApi.maxResponseTime,
       priority: siteApi.priority,
       siteNotification: site.notification,
-      maxNumberOfAttempts:siteApi.maxNumberOfAttempts || 3,
+      maxNumberOfAttempts: siteApi.maxNumberOfAttempts || 3,
       notification: {
         emailEnabled: siteApi.notificationSetting?.emailEnabled,
         emailAddress: siteApi.notificationSetting?.emailAddress,
@@ -114,4 +112,3 @@ export class SiteMonitorService {
     });
   }
 }
-

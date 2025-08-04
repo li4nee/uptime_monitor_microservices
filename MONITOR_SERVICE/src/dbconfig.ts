@@ -12,7 +12,7 @@ const dataStoreOptions: DataSourceOptions = {
   url: GlobalSettings.database.url,
   synchronize: true,
   logging: false,
-  entities: [Site,SiteApi,SiteMonitoringHistory,siteNotificationSetting],
+  entities: [Site, SiteApi, SiteMonitoringHistory, siteNotificationSetting],
   migrations: [__dirname + "/migrations/**/*.{js,ts}"],
   extra: {
     connectionLimit: 25,
@@ -41,7 +41,7 @@ export const connectToRedis = async (): Promise<RedisClientType> => {
   return redisClient;
 };
 
-export let IoRedisClientForBullMQ = new Redis(GlobalSettings.redis.url,{
+export let IoRedisClientForBullMQ = new Redis(GlobalSettings.redis.url, {
   maxRetriesPerRequest: null, // Disable automatic retries
   enableReadyCheck: true, // Enable ready check to ensure the client is ready before use
 });

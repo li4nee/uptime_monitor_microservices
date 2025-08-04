@@ -117,7 +117,6 @@ export const resgisterSiteMonitorSwagger = {
   },
 };
 
-
 export const GetMonitoringRouteSwagger = {
   type: "object",
   properties: {
