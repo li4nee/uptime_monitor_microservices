@@ -23,10 +23,9 @@ export enum HTTP_METHOD {
   PATCH = "PATCH",
 }
 
-export interface SiteMoniorDTO {
+export interface SiteMonitorDTO {
   siteId: string;
   siteApiId: string;
-  url: string;
   body?: Record<string, any>;
   headers?: Record<string, string>;
   httpMethod: HTTP_METHOD;
@@ -34,7 +33,8 @@ export interface SiteMoniorDTO {
   priority: SITE_PRIORITY;
   userId: string;
   siteNotification?: boolean;
-  maxNumberOfAttempts?: number;
+  maxNumberOfAttempts: number;
+  completeUrl: string;
   notification?: {
     emailEnabled?: boolean;
     emailAddress?: string;

@@ -13,7 +13,7 @@ export async function scheduleMonitorJob() {
       {},
       {
         repeat: {
-          pattern: "*/1 * * * *", // Every 1 minutes
+          every: 2 * 60 * 1000, // Every 2 minutes
         },
         removeOnComplete: true,
         removeOnFail: true,

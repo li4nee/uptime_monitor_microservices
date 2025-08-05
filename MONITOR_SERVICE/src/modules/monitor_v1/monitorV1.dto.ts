@@ -133,8 +133,8 @@ export const GetMonitoringRoutesDtoSchema = yup.object().shape({
 });
 
 export interface GetMonitoringHisoryDto {
-  siteId: string;
-  siteApiId: string;
+  siteId?: string;
+  siteApiId?: string;
   monitoringHistoryId?: string;
   status?: "UP" | "DOWN";
   startDate?: Date;
@@ -147,8 +147,8 @@ export interface GetMonitoringHisoryDto {
 }
 
 export const GetMonitoringHisoryDtoSchema = yup.object().shape({
-  siteId: yup.string().required(),
-  siteApiId: yup.string().required(),
+  siteId: yup.string().optional(),
+  siteApiId: yup.string().optional(),
   monitoringHistoryId: yup.string().optional(),
   status: yup.string().oneOf(["UP", "DOWN"]).optional(),
   startDate: yup.date().optional(),

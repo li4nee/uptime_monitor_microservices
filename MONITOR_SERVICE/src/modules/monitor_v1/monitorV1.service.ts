@@ -178,8 +178,8 @@ class MonitorServiceClass {
 
   async getMonitoringHistory(query: GetMonitoringHisoryDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring history");
-    if (!query.siteId) throw new InvalidInputError("Site ID is required to fetch monitoring history");
-    if (!query.siteApiId) throw new InvalidInputError("Site API ID is required to fetch monitoring history");
+    if (!(query.siteId && query.siteApiId) && !query.monitoringHistoryId)
+      throw new InvalidInputError("Either siteId and siteApiId or monitoringHistoryId must be provided");
     if (query.startDate && query.startDate.getTime() > Date.now()) throw new InvalidInputError("startDate cannot be in the future");
     if (query.endDate && query.endDate.getTime() > Date.now()) throw new InvalidInputError("endDate cannot be in the future");
     if (query.startDate && query.endDate && query.startDate.getTime() > query.endDate.getTime())
@@ -188,7 +188,6 @@ class MonitorServiceClass {
       const history = await this.siteHistoryModel.findOne({
         where: {
           id: query.monitoringHistoryId,
-          siteApi: { id: query.siteApiId, site: { id: query.siteId, userId } },
         },
       });
       if (!history) {
@@ -216,22 +215,11 @@ class MonitorServiceClass {
     let { skip, limit } = getPaginationValues(query.page || 0, query.limit || 10);
     let queryBuilder = this.siteHistoryModel
       .createQueryBuilder("history")
-      .leftJoinAndSelect("history.siteApi", "siteApi")
-      .leftJoinAndSelect("siteApi.site", "site")
+      .leftJoin("history.siteApi", "siteApi")
+      .leftJoin("siteApi.site", "site")
       .where("site.id = :siteId", { siteId: query.siteId })
       .andWhere("siteApi.id = :siteApiId", { siteApiId: query.siteApiId })
-      .select([
-        "history.id",
-        "history.status",
-        "history.responseTime",
-        "history.checkedAt",
-        "history.wasNotificationSent",
-        "siteApi.id",
-        "siteApi.path",
-        "siteApi.httpMethod",
-        "site.id",
-        "site.url",
-      ])
+      .select(["history.id", "history.status", "history.responseTime", "history.checkedAt", "history.wasNotificationSent", "history.httpMethod"])
       .orderBy("history.checkedAt", "DESC")
       .take(limit)
       .skip(skip);
@@ -241,7 +229,7 @@ class MonitorServiceClass {
 
     if (query.endDate) queryBuilder.andWhere("history.checkedAt <= :endDate", { endDate: query.endDate });
 
-    if (query.httpMethod) queryBuilder.andWhere("siteApi.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
+    if (query.httpMethod) queryBuilder.andWhere("history.httpMethod = :httpMethod", { httpMethod: query.httpMethod });
     const [history, total] = await queryBuilder.getManyAndCount();
     let totalPages = Math.ceil(total / limit);
     logger.info("Monitoring history fetched successfully", {
@@ -363,21 +351,9 @@ class MonitorServiceClass {
     let { limit, skip } = getPaginationValues(query.page || 0, query.limit || 10);
     let queryBuilder = this.siteModel
       .createQueryBuilder("site")
-      .leftJoinAndSelect("site.siteApis", "siteApi")
+      .leftJoin("site.siteApis", "siteApi")
       .where("site.userId = :userId", { userId: userId })
-      .select([
-        "site.id",
-        "site.url",
-        "site.siteName",
-        "site.isActive",
-        "site.createdAt",
-        "site.notification",
-        "siteApi.id",
-        "siteApi.path",
-        "siteApi.httpMethod",
-        "siteApi.isActive",
-        "siteApi.priority",
-      ])
+      .select(["site.id", "site.url", "site.siteName", "site.isActive", "site.createdAt", "site.notification"])
       .take(limit)
       .skip(skip)
       .orderBy(`site.${query.orderBy ?? "createdAt"}`, query.order ?? "DESC");
@@ -498,6 +474,7 @@ class MonitorServiceClass {
         site: { id: siteId, userId },
       },
       select: this.siteApiSelectFields(),
+      relations: { notificationSetting: true },
     });
   }
 
@@ -507,7 +484,7 @@ class MonitorServiceClass {
         id: siteApiId,
         site: { userId },
       },
-      relations: { site: true },
+      relations: { site: true, notificationSetting: true },
       select: {
         ...this.siteApiSelectFields(),
         site: {
@@ -529,6 +506,21 @@ class MonitorServiceClass {
       httpMethod: true,
       isActive: true,
       priority: true,
+      notificationSetting: {
+        id: true,
+        emailEnabled: true,
+        emailAddress: true,
+        discordEnabled: true,
+        discordWebhook: true,
+        slackEnabled: true,
+        slackWebhook: true,
+        notificationFrequency: true,
+        lastNotificationSentAt: true,
+      },
+      headers: true,
+      body: true,
+      maxResponseTime: true,
+      maxNumberOfAttempts: true,
     };
   }
 

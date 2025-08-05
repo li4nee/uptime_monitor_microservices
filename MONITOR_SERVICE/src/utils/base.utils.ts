@@ -25,3 +25,10 @@ export function getPaginationValues(page: number, limit: number): { page: number
   const skip = page * limit;
   return { page, limit, skip };
 }
+
+export function normalizeUrl(url: string): string {
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url;
+  }
+  return url;
+}

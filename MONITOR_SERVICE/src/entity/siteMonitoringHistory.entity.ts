@@ -42,6 +42,9 @@ export class SiteMonitoringHistory extends GlobalEntity {
   @ManyToOne(() => SiteApi, (siteApi) => siteApi.id)
   siteApi!: SiteApi;
 
+  @Column({ nullable: true })
+  completeUrl!: string;
+
   @Column({ type: "float" })
   responseTime!: number;
 

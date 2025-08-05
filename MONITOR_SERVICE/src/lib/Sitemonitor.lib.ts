@@ -4,6 +4,7 @@ import { SiteModel } from "../repo/site.repo";
 import { SiteMoniorDTO } from "../typings/base.type";
 import { SiteMonitorQueue } from "./queue/sitemonitor.queue";
 import { logger } from "../utils/logger.utils";
+import { normalizeUrl } from "../utils/base.utils";
 
 export class SiteMonitorService {
   private readonly BatchSize = 100;
@@ -79,7 +80,7 @@ export class SiteMonitorService {
     const jobData: SiteMoniorDTO = {
       siteId: site.id,
       siteApiId: siteApi.id,
-      url: site.url,
+      completeUrl: normalizeUrl(site.url + (siteApi.path ? `/${siteApi.path}` : "")),
       body: siteApi.body,
       headers: siteApi.headers,
       httpMethod: siteApi.httpMethod,

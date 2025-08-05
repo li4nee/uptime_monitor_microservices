@@ -208,14 +208,12 @@ monitorV1Router.put("/registered-routes", Wrapper(MonitorController.updateRoutes
  *     parameters:
  *       - in: query
  *         name: siteId
- *         required: true
  *         description: ID of the registered site
  *         schema:
  *           type: string
  *           example: 60c72b2f9b1e8c001c8e4d3a
  *       - in: query
  *         name: siteApiId
- *         required: true
  *         description: ID of the specific API within the site
  *         schema:
  *           type: string
@@ -366,7 +364,7 @@ monitorV1Router.get("/monitoring-history", Wrapper(MonitorController.getMonitori
 
 /**
  * @swagger
- * /monitor/v1/one-month-overview:
+ * /monitor/v1/monitoring-overview:
  *   get:
  *     summary: Get one-month monitoring overview
  *     description: Retrieves daily monitoring statistics (up, down, response time) for a given site API during a specific month.
