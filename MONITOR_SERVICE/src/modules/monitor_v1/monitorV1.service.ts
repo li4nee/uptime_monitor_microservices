@@ -260,9 +260,11 @@ class MonitorServiceClass {
     if (!yearAndMonth?.match(/^\d{4}-\d{2}$/)) throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
     const [year, month] = yearAndMonth.split("-").map((str) => Number(str));
     if (month < 1 || month > 12 || isNaN(year) || isNaN(month)) throw new InvalidInputError("Invalid year or month");
-    const startDate = new Date(year, month - 1, 1); // JavaScript months are 0-indexed tei bhara month bata ek ghatako
+    const startDate = new Date(year, month-1, 1);
     const endDate = new Date(year, month, 0); // Last day of the month
-    if (startDate.getTime() > Date.now() || endDate.getTime() > Date.now()) throw new InvalidInputError("Dates cannot be in the future");
+    console.log("Start Date:", startDate, "End Date:", endDate);
+    console.log("Current Date:", new Date());
+    if (startDate.getTime() > Date.now()) throw new InvalidInputError("Dates cannot be in the future");
     const queryBuilder = this.siteHistoryModel
       .createQueryBuilder("history")
       .innerJoin("history.siteApi", "siteApi")
