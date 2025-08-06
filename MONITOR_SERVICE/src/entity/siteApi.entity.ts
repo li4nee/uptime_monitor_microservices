@@ -46,7 +46,7 @@ export class SiteApi extends GlobalEntity {
   @Column({ type: "json", nullable: true })
   body?: Record<string, any>;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "float" })
   maxResponseTime!: number;
 
   @Column({ default: 3 })

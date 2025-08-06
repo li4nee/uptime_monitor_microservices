@@ -8,7 +8,8 @@
   "main": "index.js",
   "scripts": {
     "lint": "prettier --write 'src/**/*.ts'",
-    "start:dev": "ts-node-dev --respawn --transpile-only --project tsconfig.json src/index.ts"
+    "start:dev": "ts-node-dev --respawn --transpile-only --project tsconfig.json src/index.ts",
+    "mig:create":	"typeorm migration:create "
   },
   "dependencies": {
     "amqplib": "^0.10.8",

@@ -6,7 +6,7 @@ import { User } from "./entity/user.entity";
 const dataStoreOptions: DataSourceOptions = {
   type: "postgres",
   url: GlobalSettings.database.url,
-  synchronize: true,
+  synchronize: false,
   logging: false,
   entities: [User],
   migrations: [__dirname + "/migrations/**/*.{js,ts}"],

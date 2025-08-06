@@ -10,7 +10,7 @@ import { siteNotificationSetting } from "./entity/siteNotificationSetting.entity
 const dataStoreOptions: DataSourceOptions = {
   type: "postgres",
   url: GlobalSettings.database.url,
-  synchronize: true,
+  synchronize: false,
   logging: false,
   entities: [Site, SiteApi, SiteMonitoringHistory, siteNotificationSetting],
   migrations: [__dirname + "/migrations/**/*.{js,ts}"],

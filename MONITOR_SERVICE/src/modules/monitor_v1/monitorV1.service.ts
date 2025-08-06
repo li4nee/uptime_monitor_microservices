@@ -4,7 +4,7 @@ import { siteNotificationSetting } from "../../entity/siteNotificationSetting.en
 import { SiteModel } from "../../repo/site.repo";
 import { SiteApiModel } from "../../repo/siteApi.repo";
 import { SiteMonitoringHistoryModel } from "../../repo/siteHistory.repo";
-import { DefaultResponse, InvalidInputError, NOTIFICATION_FREQUENCY, SITE_PRIORITY } from "../../typings/base.type";
+import { DefaultResponse, InvalidInputError, NOTIFICATION_FREQUENCY, NotificationData, SITE_PRIORITY } from "../../typings/base.type";
 import { getPaginationValues } from "../../utils/base.utils";
 import { logger } from "../../utils/logger.utils";
 import {
@@ -48,8 +48,17 @@ class MonitorServiceClass {
       siteApi.maxNumberOfAttempts = api.maxNumberOfAttempts ?? 3;
       siteApi.priority = api.priority ?? SITE_PRIORITY.MEDIUM;
       siteApi.isActive = api.isActive ?? true;
+      let notificationData: NotificationData = {
+        emailEnabled: api.emailEnabled,
+        emailAddress: api.emailAddress,
+        discordEnabled: api.discordEnabled,
+        discordWebhook: api.discordWebhook,
+        slackEnabled: api.slackEnabled,
+        slackWebhook: api.slackWebhook,
+      };
+      this.checkIfNotificationSettingsIsCorrect(notificationData);
       const notificationSetting = new siteNotificationSetting();
-      notificationSetting.emailEnabled = api.emailEnabled ?? true;
+      notificationSetting.emailEnabled = api.emailEnabled ?? false;
       notificationSetting.emailAddress = api.emailAddress ?? "";
       notificationSetting.discordEnabled = api.discordEnabled ?? false;
       notificationSetting.discordWebhook = api.discordWebhook ?? "";
@@ -154,6 +163,15 @@ class MonitorServiceClass {
         siteApi.maxNumberOfAttempts = apiInput.maxNumberOfAttempts ?? 3;
         siteApi.priority = apiInput.priority ?? SITE_PRIORITY.MEDIUM;
         siteApi.isActive = apiInput.isActive ?? true;
+        let notificationData: NotificationData = {
+          emailEnabled: apiInput.emailEnabled,
+          emailAddress: apiInput.emailAddress,
+          discordEnabled: apiInput.discordEnabled,
+          discordWebhook: apiInput.discordWebhook,
+          slackEnabled: apiInput.slackEnabled,
+          slackWebhook: apiInput.slackWebhook,
+        };
+        this.checkIfNotificationSettingsIsCorrect(notificationData);
         siteApi.notificationSetting.emailEnabled = apiInput.emailEnabled ?? true;
         siteApi.notificationSetting.emailAddress = apiInput.emailAddress ?? "";
         siteApi.notificationSetting.discordEnabled = apiInput.discordEnabled ?? false;
@@ -260,7 +278,7 @@ class MonitorServiceClass {
     if (!yearAndMonth?.match(/^\d{4}-\d{2}$/)) throw new InvalidInputError("yearAndMonth must be in YYYY-MM format");
     const [year, month] = yearAndMonth.split("-").map((str) => Number(str));
     if (month < 1 || month > 12 || isNaN(year) || isNaN(month)) throw new InvalidInputError("Invalid year or month");
-    const startDate = new Date(year, month-1, 1);
+    const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0); // Last day of the month
     console.log("Start Date:", startDate, "End Date:", endDate);
     console.log("Current Date:", new Date());
@@ -347,6 +365,15 @@ class MonitorServiceClass {
       },
       pagination: null,
     });
+  }
+
+  private async checkIfNotificationSettingsIsCorrect(notiData: NotificationData): Promise<void> {
+    if (notiData.emailEnabled && !notiData.emailAddress)
+      throw new InvalidInputError("Email address is required when email notifications are enabled", true);
+    if (notiData.discordEnabled && !notiData.discordWebhook)
+      throw new InvalidInputError("Discord webhook is required when Discord notifications are enabled", true);
+    if (notiData.slackEnabled && !notiData.slackWebhook)
+      throw new InvalidInputError("Slack webhook is required when Slack notifications are enabled", true);
   }
 
   private async getMonitoringRoutesPaginated(query: GetMonitoringRoutesDto, userId: string): Promise<DefaultResponse> {

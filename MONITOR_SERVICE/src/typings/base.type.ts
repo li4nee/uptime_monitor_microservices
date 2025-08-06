@@ -21,6 +21,8 @@ export enum HTTP_METHOD {
   PUT = "PUT",
   DELETE = "DELETE",
   PATCH = "PATCH",
+  HEAD = "HEAD",
+  OPTIONS = "OPTIONS",
 }
 
 export interface SiteMonitorDTO {
@@ -119,4 +121,13 @@ export interface slackOptions {
 export interface discordOptions {
   channelId: string;
   content: string;
+}
+
+export interface NotificationData {
+  emailEnabled?: boolean;
+  emailAddress?: string;
+  discordEnabled?: boolean;
+  discordWebhook?: string;
+  slackEnabled?: boolean;
+  slackWebhook?: string;
 }

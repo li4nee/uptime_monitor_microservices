@@ -16,7 +16,7 @@ import { NOTIFICATION_FREQUENCY } from "../typings/base.type";
  */
 @Entity()
 export class siteNotificationSetting extends GlobalEntity {
-  @Column({ default: true })
+  @Column({ default: false })
   emailEnabled!: boolean;
 
   @Column({ nullable: true })

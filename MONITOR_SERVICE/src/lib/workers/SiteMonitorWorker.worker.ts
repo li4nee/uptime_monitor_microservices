@@ -1,6 +1,6 @@
 import { Job, Worker } from "bullmq";
 import axios, { AxiosRequestConfig } from "axios";
-import { NOTIFICATION_FREQUENCY, SiteMonitorDTO} from "../../typings/base.type";
+import { NOTIFICATION_FREQUENCY, SiteMonitorDTO } from "../../typings/base.type";
 import { SiteMonitoringHistory } from "../../entity/siteMonitoringHistory.entity";
 import { SiteHistorySavingQueue } from "../queue/saveHistoryToDb.queue";
 import { getMessageBrokerProducer } from "../Broker.lib";
@@ -90,8 +90,8 @@ class SiteMonitorWorker {
       email: job.returnvalue?.notificationReport?.emailSentTo,
       slack: job.returnvalue?.notificationReport?.slackSentTo,
       discord: job.returnvalue?.notificationReport?.discordSentTo,
-    }
-    history.wasNotificationSent = job.returnvalue?.notificationReport?.shouldSend
+    };
+    history.wasNotificationSent = job.returnvalue?.notificationReport?.shouldSend;
     return history;
   }
 
@@ -104,9 +104,14 @@ class SiteMonitorWorker {
     }
   }
 
-  private async processJob(
-    job: Job<SiteMonitorDTO>,
-  ): Promise<{ statusCode: number; responseTime: number; isUp: boolean; isSlow: boolean; errorLog?: string,notificationReport?: { shouldSend: boolean, emailSentTo?: string, slackSentTo?: string, discordSentTo?: string } }> {
+  private async processJob(job: Job<SiteMonitorDTO>): Promise<{
+    statusCode: number;
+    responseTime: number;
+    isUp: boolean;
+    isSlow: boolean;
+    errorLog?: string;
+    notificationReport?: { shouldSend: boolean; emailSentTo?: string; slackSentTo?: string; discordSentTo?: string };
+  }> {
     const data = job.data;
     logger.info(`Processing job ${job.id} for site ${data.completeUrl}`);
 
@@ -121,7 +126,7 @@ class SiteMonitorWorker {
 
     const startTime = performance.now();
     let responseTime = 0;
-    let notificationReport: { shouldSend: boolean, emailSentTo?: string, slackSentTo?: string, discordSentTo?: string } | undefined;
+    let notificationReport: { shouldSend: boolean; emailSentTo?: string; slackSentTo?: string; discordSentTo?: string } | undefined;
     try {
       const response = await axios(axiosConfig);
       responseTime = performance.now() - startTime;
@@ -138,7 +143,7 @@ class SiteMonitorWorker {
 
         if (shouldSend) {
           logger.info(`Sending alert for ${data.completeUrl}`);
-           notificationReport = await this.sendNotifications(data, isHealthy, isSlow);
+          notificationReport = await this.sendNotifications(data, isHealthy, isSlow);
           const siteApi = await this.siteApiModel
             .createQueryBuilder("siteApi")
             .leftJoinAndSelect("siteApi.notificationSetting", "notificationSetting")
@@ -157,7 +162,7 @@ class SiteMonitorWorker {
         }
       }
 
-      return { statusCode, responseTime, isUp: isHealthy, isSlow, errorLog: statusCode >= 400 ? response.statusText : undefined,notificationReport};
+      return { statusCode, responseTime, isUp: isHealthy, isSlow, errorLog: statusCode >= 400 ? response.statusText : undefined, notificationReport };
     } catch (error: any) {
       responseTime = performance.now() - startTime;
       const errorMsg = error.code === "ECONNABORTED" ? "Request timed out" : error?.message || "Unknown error";
@@ -195,10 +200,14 @@ class SiteMonitorWorker {
     }
   }
 
-  private async sendNotifications(data: SiteMonitorDTO, isUp: boolean, isSlow: boolean): Promise<{ shouldSend: boolean, emailSentTo?: string, slackSentTo?: string, discordSentTo?: string } | undefined> {
+  private async sendNotifications(
+    data: SiteMonitorDTO,
+    isUp: boolean,
+    isSlow: boolean,
+  ): Promise<{ shouldSend: boolean; emailSentTo?: string; slackSentTo?: string; discordSentTo?: string } | undefined> {
     const { notification } = data;
     if (!notification) return;
-    let notificationReport :{ shouldSend:boolean , emailSentTo?: string, slackSentTo?: string, discordSentTo?: string }={ shouldSend: false };
+    let notificationReport: { shouldSend: boolean; emailSentTo?: string; slackSentTo?: string; discordSentTo?: string } = { shouldSend: false };
     try {
       if (notification.emailEnabled && notification.emailAddress) {
         await this.sendEmailNotification(data, isSlow);
@@ -218,7 +227,7 @@ class SiteMonitorWorker {
       return notificationReport;
     } catch (error) {
       logger.error(`Notification failure for ${data.completeUrl}`, { error });
-      return { shouldSend: false}
+      return { shouldSend: false };
     }
   }
 

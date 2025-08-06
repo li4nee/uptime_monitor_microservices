@@ -17,7 +17,7 @@ import { SiteApi } from "./siteApi.entity";
 @Entity()
 export class Site extends GlobalEntity {
   @Index()
-  @Column()
+  @Column({ nullable: false })
   url!: string;
 
   @OneToMany(() => SiteApi, (siteApi) => siteApi.site, { cascade: true, nullable: true })
@@ -26,7 +26,7 @@ export class Site extends GlobalEntity {
   @Column()
   userId!: string;
 
-  @Column()
+  @Column({ nullable: true })
   siteName!: string;
 
   @Column({ default: true })

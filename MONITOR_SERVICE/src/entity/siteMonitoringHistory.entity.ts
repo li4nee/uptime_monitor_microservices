@@ -43,6 +43,7 @@ export class SiteMonitoringHistory extends GlobalEntity {
   siteApi!: SiteApi;
 
   @Column({ nullable: true })
+  @Index()
   completeUrl!: string;
 
   @Column({ type: "float" })
