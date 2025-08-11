@@ -4,7 +4,7 @@ import { GlobalSettings } from "./globalSettings";
 import express from "express";
 import dotenv from "dotenv";
 import { AppDataSource } from "./dbconfig";
-import { monitorV1Router } from "./modules/monitor_v1/monitorV1.route";
+import { monitorV1SiteRouter } from "./modules/monitor_v1/site/monitorV1Site.route";
 import { attachProxiedUser } from "./middleware/attachUserId.middleware";
 import { getMessageBrokerProducer } from "./lib/Broker.lib";
 import swaggerUI from "swagger-ui-express";
@@ -13,13 +13,14 @@ import { GlobalErrorHandler } from "./middleware/globalErrorHandler.middleware";
 import { logger } from "./utils/logger.utils";
 import * as promClient from "prom-client";
 import { scheduleMonitorJob } from "./lib/queue/jobSchedularCron.queue";
+import { monitorV1HistoryRouter } from "./modules/monitor_v1/monitoringHistory/monitorV1History.route";
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-app.use("/v1", attachProxiedUser, monitorV1Router);
-
+app.use("/v1/sites", attachProxiedUser, monitorV1SiteRouter);
+app.use("/v1/history", attachProxiedUser, monitorV1HistoryRouter);
 app.set("strict routing", true);
 app.use(
   "/api-docs",
@@ -71,10 +72,10 @@ app.listen(GlobalSettings.port, "0.0.0.0", async () => {
         await AppDataSource.runMigrations();
         logger.info("Migrations completed.");
       }
-      await scheduleMonitorJob();
-      await import("./lib/workers/jobSchedularCron.worker");
-      await import("./lib/workers/SiteMonitorWorker.worker");
-      await import("./lib/workers/SaveMonitoringHistory.worker");
+      // await scheduleMonitorJob();
+      // await import("./lib/workers/jobSchedularCron.worker");
+      // await import("./lib/workers/SiteMonitorWorker.worker");
+      // await import("./lib/workers/SaveMonitoringHistory.worker");
     })
     .catch((error) => {
       logger.error("DB connection error", {

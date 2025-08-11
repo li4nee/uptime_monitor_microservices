@@ -10,6 +10,7 @@ import { LoginStore } from "../../utility/login.utils";
 import { getBrokerInstance } from "../../lib/Broker.lib";
 import { generateOtp } from "../../utility/base.utils";
 import { logger } from "../../utility/logger.utils";
+import { ref } from "process";
 
 export class AuthService {
   private userModel = UserModel;
@@ -106,8 +107,9 @@ export class AuthService {
     return new DefaultResponse(200, "Password changed successfully");
   }
 
-  async changeEmail(body: changeEmailDto, userId: string) {
-    if (!userId) throw new InvalidInputError("No user ID provided");
+  async changeEmail(body: changeEmailDto, userId: string, refreshToken?: string) {
+    if (!refreshToken) throw new InvalidInputError("Refresh token is required for email change", true);
+    if (!userId) throw new InvalidInputError("No user ID provided", true);
     let user = await this.checkIfUserExistsAndReturnUser(userId, "id");
     if (!user) {
       logger.warn("User not found while changing email", { userId });
@@ -116,7 +118,7 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(body.password, user.password);
     if (!isPasswordValid) {
       logger.warn("Password is incorrect while changing email", { userId });
-      throw new InvalidInputError("Password is incorrect");
+      throw new InvalidInputError("Password is incorrect", true);
     }
     const emailExists = await this.checkIfUserExistsAndReturnUser(body.newEmail, "email");
     if (emailExists) {
@@ -136,6 +138,7 @@ export class AuthService {
     };
     await this.broker.sendEmail(mailData);
     logger.info("Email changed successfully and Otp sent", { userId, newEmail: body.newEmail });
+    await LoginStore.removeuserToken(userId, refreshToken);
     return new DefaultResponse(200, "Email changed successfully.Please verify your email.", { email: user.email });
   }
 

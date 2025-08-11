@@ -13,7 +13,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
- *     description: Register a new user account with email and password. The password and confirmPassword must match.
+ *     description: Register a new user account with email and password. The password and confirmPassword must match.After you complete the signup you will get an OTP on your email to verify your email. You can then use the verify-email endpoint to verify your email.
  *     requestBody:
  *       required: true
  *       content:
@@ -42,7 +42,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *                 description: Must match the password field
  *     responses:
  *       201:
- *         description: User created successfully. Email verification OTP sent.
+ *         description: User created successfully, please verify your email.
  *         content:
  *           application/json:
  *             schema:
@@ -53,13 +53,13 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *                   example: 201
  *                 message:
  *                   type: string
- *                   example: User created successfully, please verify your email
+ *                   example: User created successfully, please verify your email.
  *                 data:
  *                   type: object
  *                   properties:
- *                      userId:
+ *                      email:
  *                          type: string
- *                          description: The ID of the newly created user
+ *                          description: The email of the newly created user.
  *       400:
  *         description: Validation error or user already exists
  *
@@ -67,7 +67,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *   post:
  *     summary: Log in a user
  *     tags: [Auth]
- *     description: Logs in a user with email and password, returns access and refresh tokens in cookies and JSON response.
+ *     description: Logs in a user with email and password, returns access and refresh tokens in cookies and JSON response. You need to verify your email before you can login.
  *     requestBody:
  *       required: true
  *       content:
@@ -105,8 +105,10 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *                   properties:
  *                     accessToken:
  *                       type: string
+ *                       description: JWT access token for the user
  *                     refreshToken:
  *                       type: string
+ *                       description: JWT refresh token for the user
  *       400:
  *         description: Invalid credentials or validation error
  *
@@ -117,11 +119,20 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *     security:
  *       - bearerAuth: []
  *     description: Logs out the user by invalidating the refresh token and clearing cookies.
- *     requestBody:
- *       required: false
  *     responses:
  *       200:
  *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
  *       400:
  *         description: Missing token or invalid request
  *
@@ -140,7 +151,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *             schema:
  *               type: object
  *               properties:
- *                 statusCode:
+ *                 status:
  *                   type: integer
  *                   example: 200
  *                 message:
@@ -154,10 +165,26 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *                       properties:
  *                         id:
  *                           type: string
+ *                           format: uuid
+ *                           example: 9adc6047-8bcd-4183-93f1-6a77e5777349
+ *                         createdAt:
+ *                           type: string
+ *                           format: date-time
+ *                           example: 2025-08-06T07:07:19.606Z
+ *                         updatedAt:
+ *                           type: string
+ *                           format: date-time
+ *                           example: 2025-08-06T07:07:45.602Z
+ *                         trash:
+ *                           type: boolean
+ *                           example: false
  *                         email:
  *                           type: string
+ *                           format: email
+ *                           example: example@gmail.com
  *                         emailVerified:
  *                           type: boolean
+ *                           example: true
  *       400:
  *         description: User not found or invalid request
  *
@@ -167,7 +194,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
- *     description: Changes user's password after validating old password.
+ *     description: Changes user's password after validating old password, removes access token cookie and invalidates the refresh token.
  *     requestBody:
  *       required: true
  *       content:
@@ -198,7 +225,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
- *     description: Change the user's email after validating password. Sends OTP for new email verification.
+ *     description: Change the user's email after validating password. Sends OTP for new email verification.Removes access and refresh token cookies, invalidates the refresh token.Only can login with the new email after verification.
  *     requestBody:
  *       required: true
  *       content:
@@ -226,7 +253,7 @@ import { authenticate } from "../../middleware/authenticator.middleware";
  *   post:
  *     summary: Verify user's email via OTP
  *     tags: [Auth]
- *     description: Verifies the user's email using OTP sent on registration or email change.
+ *     description: Verifies the user's email using OTP sent on registration or email change. 
  *     requestBody:
  *       required: true
  *       content:

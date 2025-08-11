@@ -121,7 +121,6 @@ export class SiteMonitoringHistory1754459127519 implements MigrationInterface {
       );
     }
 
-
     await queryRunner.createForeignKey(
       "site_monitoring_history",
       new TableForeignKey({

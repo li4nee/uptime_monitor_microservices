@@ -54,13 +54,17 @@ class AuthControllerClass {
       throw new InvalidInputError("Refresh token is required");
     }
     let message = await this.userService.changePassword(body, req.userId, req.refreshToken);
+    removeCookie(res, "accessToken");
+    removeCookie(res, "refreshToken");
     res.status(200).json(message);
     return;
   }
 
   async changeEmail(req: AuthenticatedRequest, res: Response) {
     let body = await changeEmailValidationSchema.validate(req.body);
-    let message = await this.userService.changeEmail(body, req.userId);
+    let message = await this.userService.changeEmail(body, req.userId, req.refreshToken);
+    removeCookie(res, "accessToken");
+    removeCookie(res, "refreshToken");
     res.status(200).json(message);
     return;
   }

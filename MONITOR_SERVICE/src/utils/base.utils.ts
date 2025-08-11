@@ -33,10 +33,14 @@ export function normalizeUrl(url: string): string {
   return url;
 }
 
-export function checkIndexKeySchema(tableName: string,indexKey:string): string {
+export function checkIndexKeySchema(tableName: string, indexKey: string): string {
   return `
     SELECT indexname 
     FROM pg_indexes 
     WHERE tablename = '${tableName}' AND indexname = '${indexKey}'
   `;
+}
+
+export function normalizePath(filePath: string): string {
+  return path.normalize(filePath).replace(/\/+$/, "");
 }

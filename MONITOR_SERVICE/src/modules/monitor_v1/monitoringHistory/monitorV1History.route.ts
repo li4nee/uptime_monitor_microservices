@@ -1,210 +1,29 @@
 import { Router } from "express";
-import { Wrapper } from "../../utils/base.utils";
-import { MonitorController } from "./monitorV1.controller";
-const monitorV1Router = Router();
+import { MonitorHistoryController } from "./monitorV1History.controller";
+import { Wrapper } from "../../../utils/base.utils";
 
+const monitorV1HistoryRouter = Router();
 /**
  * @swagger
- * /monitor/v1/register:
- *   post:
- *     summary: Register a new site for monitoring
- *     description: Registers a new site for monitoring. If the URL is already registered, it returns an error.
- *     tags: [Monitor V1]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RegisterSiteMonitorDto'
- *     responses:
- *       200:
- *         description: Monitoring routes registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Monitoring routes registered successfully
- *       400:
- *         description: Invalid input data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: This URL is already registered for monitoring, please edit the existing site instead of creating a new one
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Internal server error
- */
-monitorV1Router.post("/register", Wrapper(MonitorController.registerSiteMonitor.bind(MonitorController)));
-
-/**
- * @swagger
- * /monitor/v1/registered-routes:
- *   get:
- *     summary: Get registered monitoring routes
- *     description: Retrieves all registered monitoring routes for a specific site or API with filtering and pagination.
- *     tags: [Monitor V1]
- *     parameters:
- *       - in: query
- *         name: siteId
- *         schema:
- *           type: string
- *         description: ID of the registered site
- *       - in: query
- *         name: siteApiId
- *         schema:
- *           type: string
- *         required: false
- *         description: ID of the specific API within the site
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         required: false
- *         description: Search term to filter APIs by path, URL, or site name
- *       - in: query
- *         name: orderBy
- *         schema:
- *           type: string
- *           enum: [createdAt, url]
- *           default: createdAt
- *         required: false
- *         description: Field to order results by
- *       - in: query
- *         name: order
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: DESC
- *         required: false
- *         description: Order direction
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         required: false
- *         description: Number of results per page (1–20)
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 0
- *         required: false
- *         description: Page number for pagination, starts from 0
- *       - in: query
- *         name: isActive
- *         schema:
- *           type: boolean
- *           default: true
- *         required: false
- *         description: Filter by active status
- *       - in: query
- *         name: priority
- *         schema:
- *           type: integer
- *           enum: [1, 2, 3, 4]
- *         required: false
- *         description: Filter by API priority
- *     responses:
- *       200:
- *         description: Monitoring routes fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Monitoring routes fetched successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     sites:
- *                       type: array
- *                       items:
- *                         type: object
- *                     pagination:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: number
- *                         page:
- *                           type: number
- *                         limit:
- *                           type: number
- *                         totalPages:
- *                           type: number
- */
-monitorV1Router.get("/registered-routes", Wrapper(MonitorController.getRoutes.bind(MonitorController)));
-
-/**
- * @swagger
- * /monitor/v1/registered-routes:
- *   put:
- *     summary: Update registered monitoring routes
- *     description: Updates the details of a registered monitoring route.
- *     tags: [Monitor V1]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateSiteMonitorDto'
- *     responses:
- *       200:
- *         description: Monitoring route updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Monitoring route updated successfully
- *       400:
- *         description: Invalid input data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Invalid input data
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Internal server error
- */
-monitorV1Router.put("/registered-routes", Wrapper(MonitorController.updateRoutes.bind(MonitorController)));
-
-/**
- * @swagger
- * /monitor/v1/monitoring-history:
+ * /monitor/v1/history/:
  *   get:
  *     summary: Get monitoring history for a specific API
- *     description: Retrieves monitoring history records for a site API, with optional filters and pagination.
- *     tags: [Monitor V1]
+ *     description: >
+ *       Retrieves monitoring history records with filtering and pagination.
+ *       
+ *       **Parameter requirements:**
+ *       - You **must provide either**:
+ *         - Both `siteId` and `siteApiId` (to get a paginated list of history records for that API), **OR**
+ *         - `monitoringHistoryId` alone (to get detailed information for a specific monitoring history record).
+ *       
+ *       The two options return different response shapes:
+ *       - When using `siteId` and `siteApiId`, the response contains a paginated list of history entries.
+ *       - When using `monitoringHistoryId`, the response contains detailed information about a single history record.
+ *       
+ *       If parameters are missing or invalid, an error will be returned.
+ *     tags: [Monitor V1 History]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: siteId
@@ -360,15 +179,17 @@ monitorV1Router.put("/registered-routes", Wrapper(MonitorController.updateRoutes
  *                         totalPages:
  *                           type: integer
  */
-monitorV1Router.get("/monitoring-history", Wrapper(MonitorController.getMonitoringHistory.bind(MonitorController)));
+monitorV1HistoryRouter.get("/", Wrapper(MonitorHistoryController.getMonitoringHistory.bind(MonitorHistoryController)));
 
 /**
  * @swagger
- * /monitor/v1/monitoring-overview:
+ * /monitor/v1/history/monthly-overview:
  *   get:
  *     summary: Get one-month monitoring overview
  *     description: Retrieves daily monitoring statistics (up, down, response time) for a given site API during a specific month.
- *     tags: [Monitor V1]
+ *     tags: [Monitor V1 History]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: siteId
@@ -475,6 +296,6 @@ monitorV1Router.get("/monitoring-history", Wrapper(MonitorController.getMonitori
  *                   type: string
  *                   example: Internal server error
  */
-monitorV1Router.get("/monitoring-overview", Wrapper(MonitorController.getOneMonthOverview.bind(MonitorController)));
+monitorV1HistoryRouter.get("/monthly-overview", Wrapper(MonitorHistoryController.getOneMonthOverview.bind(MonitorHistoryController)));
 
-export { monitorV1Router };
+export { monitorV1HistoryRouter };

@@ -1,5 +1,5 @@
 import swaggerJSDoc from "swagger-jsdoc";
-import { resgisterSiteMonitorSwagger, UpdateMonitoringRoutesSwagger } from "./modules/monitor_v1/monitorV1.swagger";
+import { AddNewSiteApiDtoSwagger, EditExistingSiteApiSwagger, resgisterSiteMonitorSwagger } from "./modules/monitor_v1/site/monitorV1Site.swagger";
 
 const options = {
   definition: {
@@ -12,14 +12,15 @@ const options = {
     components: {
       securitySchemes: {
         BearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
+          type: "apiKey",
+          in: "cookie",
+          name: "accessToken",
         },
       },
       schemas: {
         RegisterSiteMonitorDto: resgisterSiteMonitorSwagger,
-        UpdateSiteMonitorDto: UpdateMonitoringRoutesSwagger,
+        AddNewSiteApiDto: AddNewSiteApiDtoSwagger,
+        EditExistingSiteApiDto: EditExistingSiteApiSwagger,
       },
     },
     security: [

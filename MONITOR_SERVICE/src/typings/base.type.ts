@@ -73,8 +73,8 @@ export class PermissionNotGranted extends CustomError {
 }
 
 export class ResourceNotFoundError extends CustomError {
-  constructor(message: string = "Resource not found") {
-    super(message, 404);
+  constructor(message: string = "Resource not found", logged: boolean = false) {
+    super(message, 404, logged);
   }
 }
 
@@ -125,9 +125,9 @@ export interface discordOptions {
 
 export interface NotificationData {
   emailEnabled?: boolean;
-  emailAddress?: string;
+  emailAddress?: string | null;
   discordEnabled?: boolean;
-  discordWebhook?: string;
+  discordWebhook?: string | null;
   slackEnabled?: boolean;
-  slackWebhook?: string;
+  slackWebhook?: string | null;
 }
