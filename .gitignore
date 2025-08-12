@@ -4,3 +4,11 @@
 redis
 rabbitmq
 pgdata
+
+
+*.log
+logs/
+log/
+
+# Coverage reports
+coverage/

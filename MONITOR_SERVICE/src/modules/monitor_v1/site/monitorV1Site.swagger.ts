@@ -135,54 +135,54 @@ export const AddNewSiteApiDtoSwagger = {
         type: "object",
         required: ["path", "httpMethod", "notificationSetting"],
         properties: {
-          path: { 
-            type: "string", 
-            description: "API endpoint path", 
-            example: "/api/v1/health" 
+          path: {
+            type: "string",
+            description: "API endpoint path",
+            example: "/api/v1/health",
           },
-          httpMethod: { 
-            type: "string", 
+          httpMethod: {
+            type: "string",
             description: "HTTP method to use for the API",
             enum: Object.values(HTTP_METHOD),
-            example: "GET" 
+            example: "GET",
           },
           headers: {
             type: "object",
             description: "Optional headers to include in the request",
             additionalProperties: { type: "string" },
             default: {},
-            example: { "Authorization": "Bearer token", "Content-Type": "application/json" }
+            example: { Authorization: "Bearer token", "Content-Type": "application/json" },
           },
           body: {
             type: "object",
             description: "Optional request body",
             default: {},
-            example: { "query": "status", "filter": "active" }
+            example: { query: "status", filter: "active" },
           },
           maxResponseTime: {
             type: "number",
             description: "Max acceptable response time in ms",
             default: 5000,
-            example: 3000
+            example: 3000,
           },
           maxNumberOfAttempts: {
             type: "number",
             description: "Max retry attempts before marking as down",
             default: 3,
-            example: 5
+            example: 5,
           },
           priority: {
             type: "number",
             description: "Priority of the API",
             enum: Object.values(SITE_PRIORITY),
             default: SITE_PRIORITY.MEDIUM,
-            example: SITE_PRIORITY.HIGH
+            example: SITE_PRIORITY.HIGH,
           },
           isActive: {
             type: "boolean",
             description: "Enable/disable monitoring for this API",
             default: true,
-            example: true
+            example: true,
           },
           notificationSetting: {
             type: "object",
@@ -192,7 +192,7 @@ export const AddNewSiteApiDtoSwagger = {
                 type: "boolean",
                 description: "Enable email notifications for this API",
                 default: false,
-                example: true
+                example: true,
               },
               emailAddress: {
                 type: "string",
@@ -205,7 +205,7 @@ export const AddNewSiteApiDtoSwagger = {
                 type: "boolean",
                 description: "Enable Discord notifications for this API",
                 default: false,
-                example: true
+                example: true,
               },
               discordWebhook: {
                 type: "string",
@@ -218,7 +218,7 @@ export const AddNewSiteApiDtoSwagger = {
                 type: "boolean",
                 description: "Enable Slack notifications for this API",
                 default: false,
-                example: true
+                example: true,
               },
               slackWebhook: {
                 type: "string",
@@ -232,12 +232,12 @@ export const AddNewSiteApiDtoSwagger = {
                 description: "How often to send notifications",
                 enum: Object.values(NOTIFICATION_FREQUENCY),
                 default: NOTIFICATION_FREQUENCY.DAILY,
-                example: NOTIFICATION_FREQUENCY.HOURLY
+                example: NOTIFICATION_FREQUENCY.HOURLY,
               },
             },
           },
         },
-      }
+      },
     },
   },
 };

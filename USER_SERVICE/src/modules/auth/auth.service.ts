@@ -8,15 +8,19 @@ import jwt from "jsonwebtoken";
 import { GlobalSettings } from "../../globalSettings";
 import { LoginStore } from "../../utility/login.utils";
 import { getBrokerInstance } from "../../lib/Broker.lib";
-import { generateOtp } from "../../utility/base.utils";
+import { generateOtp, isValidEmail } from "../../utility/base.utils";
 import { logger } from "../../utility/logger.utils";
 import { ref } from "process";
 
 export class AuthService {
-  private userModel = UserModel;
-  private broker = getBrokerInstance();
+  constructor(
+    private userModel = UserModel,
+    private broker = getBrokerInstance(),
+  ) {}
 
   async signup(body: signupDto) {
+    if (!body.email || body.email.length == 0) throw new InvalidInputError("Email is required");
+    if (!body.password || !body.confirmPassword) throw new InvalidInputError("Password and confirm password are required");
     if (body.password != body.confirmPassword) throw new InvalidInputError("Password and confirm password don't match");
     let oldUser = await this.checkIfUserExistsAndReturnUser(body.email, "email");
     if (oldUser) {
@@ -36,7 +40,7 @@ export class AuthService {
       subject: "Email Verification",
       text: `Your OTP for email verification is ${OTP}`,
     };
-    await Promise.all([LoginStore.setOtpToken(OTP, user.email, 60 * 5 * 1000), this.broker.sendEmail(mailData)]);
+    await Promise.all([LoginStore.setOtpToken(OTP, user.email, GlobalSettings.tokensAndExpiry.OTPexpiry), this.broker.sendEmail(mailData)]);
     logger.info("User created successfully, OTP sent", { email: body.email, userId: user.id });
     return new DefaultResponse(201, "User created successfully, please verify your email", { email: body.email });
   }
@@ -57,9 +61,9 @@ export class AuthService {
       logger.warn("Invalid password for user", { email: body.email, userId: user.id });
       throw new InvalidInputError("Invalid password", true);
     }
-    const accessToken = this.generateToken(user.id, ROLE.USER, "2m");
-    const refreshToken = this.generateToken(user.id, ROLE.USER, "7d");
-    LoginStore.setuserToken(refreshToken, user.id, 60 * 60 * 24 * 7);
+    const accessToken = this.generateToken(user.id, ROLE.USER, GlobalSettings.tokensAndExpiry.accessTokenExpiry as jwt.SignOptions["expiresIn"]);
+    const refreshToken = this.generateToken(user.id, ROLE.USER, GlobalSettings.tokensAndExpiry.refreshTokenExpiry as jwt.SignOptions["expiresIn"]);
+    LoginStore.setuserToken(refreshToken, user.id, GlobalSettings.tokensAndExpiry.refreshTokenExpiryInSeconds);
     logger.info("User logged in successfully", { email: body.email, userId: user.id });
     return new DefaultResponse(200, "Login successful", {
       accessToken,
@@ -89,6 +93,10 @@ export class AuthService {
 
   async changePassword(body: changePasswordDto, userId: string, token: string) {
     if (!userId) throw new InvalidInputError("No user ID provided");
+    if (!body.oldPassword || !body.newPassword) throw new InvalidInputError("Old and new passwords are required", true);
+    if (body.oldPassword === body.newPassword) throw new InvalidInputError("Old and new passwords cannot be the same", true);
+    if (body.newPassword.length < 6) throw new InvalidInputError("New password must be at least 6 characters long", true);
+    if (!token) throw new InvalidInputError("No token provided for password change", true);
     let user = await this.checkIfUserExistsAndReturnUser(userId, "id");
     if (!user) {
       logger.warn("User not found while changing password", { userId });
@@ -110,6 +118,7 @@ export class AuthService {
   async changeEmail(body: changeEmailDto, userId: string, refreshToken?: string) {
     if (!refreshToken) throw new InvalidInputError("Refresh token is required for email change", true);
     if (!userId) throw new InvalidInputError("No user ID provided", true);
+    if (!body.newEmail || !body.password) throw new InvalidInputError("New email and password are required", true);
     let user = await this.checkIfUserExistsAndReturnUser(userId, "id");
     if (!user) {
       logger.warn("User not found while changing email", { userId });
@@ -144,6 +153,7 @@ export class AuthService {
 
   async verifyEmail(email: string, otp: string) {
     if (!email) throw new InvalidInputError("No email provided");
+    if (!isValidEmail(email)) throw new InvalidInputError("Invalid email format", true);
     if (!otp) {
       logger.warn("No OTP provided for email verification", { email });
       throw new InvalidInputError("No OTP provided", true);
@@ -166,6 +176,8 @@ export class AuthService {
   }
 
   async sendVerificationMail(email: string) {
+    if (!email) throw new InvalidInputError("No email provided for verification", true);
+    if (!isValidEmail(email)) throw new InvalidInputError("Invalid email format", true);
     const user = await this.checkIfUserExistsAndReturnUser(email, "email");
     if (!user) {
       logger.warn("User with this email does not exist", { email });
@@ -183,13 +195,15 @@ export class AuthService {
       subject: "Email Verification",
       text: `Your OTP for email verification is ${OTP}`,
     };
-    console.log(OTP);
     await this.broker.sendEmail(mailData);
     logger.info("Verification mail sent successfully", { email, userId: user.id });
     return new DefaultResponse(200, "Verification mail sent successfully", { email: user.email });
   }
 
   private async checkIfUserExistsAndReturnUser(data: string, type: "email" | "id") {
+    if (!data || data.length === 0) throw new InvalidInputError("Data is required to check user existence", true);
+    if (type !== "email" && type !== "id") throw new InvalidInputError("Invalid type provided for user existence check", true);
+    if (type === "email" && !isValidEmail(data)) throw new InvalidInputError("Invalid email format", true);
     const whereClause = type === "email" ? { email: data } : { id: data };
     const user = await this.userModel.findOne({
       where: whereClause,

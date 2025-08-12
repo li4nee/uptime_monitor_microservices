@@ -4,6 +4,7 @@ import {
   changePasswordValidationSchema,
   loginDto,
   loginValidationSchema,
+  sendVerificationMailValidationSchema,
   signupDto,
   signupValidationSchema,
   verifyEmailDto,
@@ -16,7 +17,7 @@ import { getBrokerInstance } from "../../lib/Broker.lib";
 import { GlobalSettings } from "../../globalSettings";
 
 class AuthControllerClass {
-  private userService = new AuthService();
+  constructor(private userService = new AuthService()) {}
 
   async signup(req: Request, res: Response) {
     let data: signupDto = await signupValidationSchema.validate(req.body);
@@ -79,9 +80,9 @@ class AuthControllerClass {
 
   // HAVE TO ADD RATE LIMIT HERE
   async sendVerificationMail(req: Request, res: Response) {
-    let body: string = req.body.email;
+    let body = await sendVerificationMailValidationSchema.validate(req.body);
     if (!body) throw new InvalidInputError("Email is required");
-    let result = await this.userService.sendVerificationMail(body);
+    let result = await this.userService.sendVerificationMail(body.email);
     res.status(200).json(result);
     return;
   }

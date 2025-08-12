@@ -18,7 +18,7 @@ upwithlogs:
 	sudo docker compose logs -f api-gateway user-service monitor-service worker
 
 lint:
-	prettier --write "./API_GATEWAY/src/**/*.ts" "./MONITOR_SERVICE/src/**/*.ts" "./USER_SERVICE/src/**/*.ts" "./WORKER/src/**/*.ts"
+	prettier --write "./API_GATEWAY/src/**/*.ts" "./MONITOR_SERVICE/src/**/*.ts" "./USER_SERVICE/src/**/*.ts" "./USER_SERVICE/__test__/*/*.ts" "./WORKER/src/**/*.ts"
 
 
 

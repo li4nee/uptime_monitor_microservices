@@ -21,5 +21,11 @@ const GlobalSettings = {
   mail: {
     from: process.env.MAIL_USER || "random@gmail.com",
   },
+  tokensAndExpiry: {
+    accessTokenExpiry: "2m",
+    refreshTokenExpiry: "7d",
+    OTPexpiry: (60 * 5 * 1000) as number,
+    refreshTokenExpiryInSeconds: 60 * 60 * 24 * 7,
+  },
 };
 export { GlobalSettings };

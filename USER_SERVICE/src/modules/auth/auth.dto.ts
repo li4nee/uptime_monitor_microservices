@@ -64,3 +64,10 @@ export const verifyEmailValidationSchema = yup
     email: yup.string().required().email(),
   })
   .noUnknown();
+
+export const sendVerificationMailValidationSchema = yup
+  .object()
+  .shape({
+    email: yup.string().required().email(),
+  })
+  .noUnknown();

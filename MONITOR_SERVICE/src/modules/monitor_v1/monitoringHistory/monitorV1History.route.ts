@@ -10,16 +10,16 @@ const monitorV1HistoryRouter = Router();
  *     summary: Get monitoring history for a specific API
  *     description: >
  *       Retrieves monitoring history records with filtering and pagination.
- *       
+ *
  *       **Parameter requirements:**
  *       - You **must provide either**:
  *         - Both `siteId` and `siteApiId` (to get a paginated list of history records for that API), **OR**
  *         - `monitoringHistoryId` alone (to get detailed information for a specific monitoring history record).
- *       
+ *
  *       The two options return different response shapes:
  *       - When using `siteId` and `siteApiId`, the response contains a paginated list of history entries.
  *       - When using `monitoringHistoryId`, the response contains detailed information about a single history record.
- *       
+ *
  *       If parameters are missing or invalid, an error will be returned.
  *     tags: [Monitor V1 History]
  *     security:

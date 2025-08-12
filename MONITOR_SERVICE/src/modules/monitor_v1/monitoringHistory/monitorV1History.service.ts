@@ -120,8 +120,7 @@ class MonitorHistoryServiceClass {
       .groupBy(`day`)
       .orderBy(`day`, "ASC")
       .getRawMany();
-    if(results.length == 0)
-      throw new ResourceNotFoundError("No history found for the given API to provide the overview",true)
+    if (results.length == 0) throw new ResourceNotFoundError("No history found for the given API to provide the overview", true);
     const dailyStatsMap: Record<string, any> = {};
     results.forEach((row) => {
       const dayKey = new Date(row.day).toISOString().split("T")[0];
