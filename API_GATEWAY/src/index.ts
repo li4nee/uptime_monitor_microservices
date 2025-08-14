@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import { createProxyMiddleware, RequestHandler, Options, RequestHandler as ProxyRequestHandler } from "http-proxy-middleware";
 import dotenv from "dotenv";
 import { GlobalSettings } from "./globalSettings";
-import { authenticate } from "./middleware/authenticate";
+import { authenticate } from "./middleware/authenticate.middleware";
 import cookieParser from "cookie-parser";
 import { AuthenticatedRequest, CustomError } from "./typings/base.typings";
 import { logger } from "./utility/logger.utils";
@@ -10,12 +10,17 @@ import * as promClient from "prom-client";
 import cors from "cors";
 import { initialDocumentation } from "./typings/initialDcoumentation.typings";
 import helmet from "helmet";
+import { createGlobalRateLimiter } from "./middleware/rateLImit.middleware";
 
 dotenv.config();
 
 const app = express();
 
 app.use(helmet());
+
+// 2 mins 30 requests
+app.use(createGlobalRateLimiter(2 * 60 * 1000, 30));
+
 
 // Middleware to parse JSON, URL-encoded data and cookies
 app.use(cookieParser());
