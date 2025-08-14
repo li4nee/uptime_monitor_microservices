@@ -9,10 +9,13 @@ import { logger } from "./utility/logger.utils";
 import * as promClient from "prom-client";
 import cors from "cors";
 import { initialDocumentation } from "./typings/initialDcoumentation.typings";
+import helmet from "helmet";
 
 dotenv.config();
 
 const app = express();
+
+app.use(helmet());
 
 // Middleware to parse JSON, URL-encoded data and cookies
 app.use(cookieParser());
