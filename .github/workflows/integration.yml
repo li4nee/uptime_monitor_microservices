@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x, 24.x]
+        node-version: [24.x]
 
     steps:
     - name: Checkout code
@@ -26,14 +26,14 @@ jobs:
       working-directory: ./API_GATEWAY
       run: |
         yarn run lint
-        yarn install
+        yarn install --frozen-lockfile
         yarn run build
     
     - name: Build and test USER_SERVICE
       working-directory: ./USER_SERVICE
       run: |
         yarn run lint
-        yarn install
+        yarn install --frozen-lockfile
         yarn run build
         yarn run test
     
@@ -41,13 +41,13 @@ jobs:
       working-directory: ./MONITOR_SERVICE
       run: |
         yarn run lint
-        yarn install
+        yarn install --frozen-lockfile
         yarn run build
     
     - name: Build and test WORKER
       working-directory: ./WORKER
       run: |
         yarn run lint
-        yarn install
+        yarn install --frozen-lockfile
         yarn run build
 
