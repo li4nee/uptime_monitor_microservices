@@ -10,7 +10,7 @@
     "lint": "prettier --write 'src/**/*.ts'",
     "start:dev": "ts-node-dev --respawn --transpile-only --project tsconfig.json src/index.ts",
     "mig:create": "typeorm migration:create ",
-    "test": "jest --detectOpenHandles",
+    "test": "jest --detectOpenHandles --forceExit",
     "test:coverage": "jest --coverage --watchAll --detectOpenHandles",
     "build": "tsc --project tsconfig.json",
     "start:prod": "node dist/src/index.js"
