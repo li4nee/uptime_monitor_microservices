@@ -1,7 +1,7 @@
 import { Site } from "../entity/site.entity";
 import { SiteApi } from "../entity/siteApi.entity";
 import { SiteModel } from "../repo/site.repo";
-import { SiteMoniorDTO } from "../typings/base.type";
+import { SiteMonitorDTO } from "../typings/base.type";
 import { SiteMonitorQueue } from "./queue/sitemonitor.queue";
 import { logger } from "../utils/logger.utils";
 import { normalizeUrl } from "../utils/base.utils";
@@ -77,7 +77,7 @@ export class SiteMonitorService {
   }
 
   private async queueSiteApiJob(site: Site, siteApi: SiteApi): Promise<void> {
-    const jobData: SiteMoniorDTO = {
+    const jobData: SiteMonitorDTO = {
       siteId: site.id,
       siteApiId: siteApi.id,
       completeUrl: normalizeUrl(site.url + (siteApi.path ? `/${siteApi.path}` : "")),
