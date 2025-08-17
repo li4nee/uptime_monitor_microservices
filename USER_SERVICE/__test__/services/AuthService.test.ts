@@ -592,7 +592,7 @@ describe("AuthService.VerifyEmail Tests", () => {
     LoginStore.verifyOtpToken = jest.fn().mockResolvedValueOnce(true);
     mockUserModel.findOne.mockResolvedValueOnce(null);
     await expect(authService.verifyEmail("nishant@gmail.com", "123456")).rejects.toMatchObject({ statusCode: 400, message: "User not found" });
-  })
+  });
 
   it("Should update user emailVerified status, remove OTP from LoginStore, send success email and return success response on successful email verification", async () => {
     LoginStore.verifyOtpToken = jest.fn().mockResolvedValueOnce(true);
@@ -602,17 +602,14 @@ describe("AuthService.VerifyEmail Tests", () => {
     mockBroker.sendEmail.mockResolvedValueOnce();
 
     const res = await authService.verifyEmail("nishant@gmail.com", "123456");
-    
+
     expect(LoginStore.verifyOtpToken).toHaveBeenCalledWith("nishant@gmail.com", "123456");
     expect(mockUserModel.save).toHaveBeenCalledWith(expect.objectContaining({ id: "123", emailVerified: true }));
-    expect(LoginStore.removeOtpToken).toHaveBeenCalledWith("nishant@gmail.com","123456");
+    expect(LoginStore.removeOtpToken).toHaveBeenCalledWith("nishant@gmail.com", "123456");
 
     expect(res).toBeDefined();
     expect(res).toBeInstanceOf(DefaultResponse);
     expect(res.status).toBe(200);
     expect(res.message).toBe("Email verified successfully");
-  })
-
+  });
 });
-
-

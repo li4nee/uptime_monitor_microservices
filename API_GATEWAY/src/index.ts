@@ -21,7 +21,6 @@ app.use(helmet());
 // 2 mins 30 requests
 app.use(createGlobalRateLimiter(2 * 60 * 1000, 30));
 
-
 // Middleware to parse JSON, URL-encoded data and cookies
 app.use(cookieParser());
 
