@@ -2,58 +2,91 @@ name: Integration
 
 on:
   pull_request:
-      branches: [ "main" ]
+    branches: [ "main" ]
   push:
     branches: [ "main" ]
 
 jobs:
- buildAndTest:
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24.x]
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-    
-    - name: Install prettier
-      run: yarn global add prettier
-    
-    - name: Run Makefile
-      run: |
-        prettier --write "./API_GATEWAY/src/**/*.ts" \
-                  "./MONITOR_SERVICE/src/**/*.ts" \
-                  "./USER_SERVICE/src/**/*.ts" \
-                  "./USER_SERVICE/__test__/*/*.ts" \
-                  "./WORKER/src/**/*.ts"
-    
-    - name: Build and test API_GATEWAY
-      working-directory: ./API_GATEWAY
-      run: |
-        yarn install --frozen-lockfile
-        yarn run build
-    
-    - name: Build and test USER_SERVICE
-      working-directory: ./USER_SERVICE
-      run: |
-        yarn install --frozen-lockfile
-        yarn run build
-        yarn run test
-    
-    - name: Build and test MONITOR_SERVICE
-      working-directory: ./MONITOR_SERVICE
-      run: |
-        yarn install --frozen-lockfile
-        yarn run build
-    
-    - name: Build and test WORKER
-      working-directory: ./WORKER
-      run: |
-        yarn install --frozen-lockfile
-        yarn run build
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Install Prettier
+        run: yarn global add prettier
+      - name: Run Prettier
+        run: |
+          prettier --write "./API_GATEWAY/src/**/*.ts" \
+                    "./MONITOR_SERVICE/src/**/*.ts" \
+                    "./USER_SERVICE/src/**/*.ts" \
+                    "./USER_SERVICE/__test__/*/*.ts" \
+                    "./WORKER/src/**/*.ts"
 
+  api-gateway:
+    runs-on: ubuntu-latest
+    needs: lint   
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Build API_GATEWAY
+        working-directory: ./API_GATEWAY
+        run: |
+          yarn install --frozen-lockfile
+          yarn run build
+
+  user-service:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Build and test USER_SERVICE
+        working-directory: ./USER_SERVICE
+        run: |
+          yarn install --frozen-lockfile
+          yarn run build
+          yarn run test
+
+  monitor-service:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Build MONITOR_SERVICE
+        working-directory: ./MONITOR_SERVICE
+        run: |
+          yarn install --frozen-lockfile
+          yarn run build
+
+  worker:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Build WORKER
+        working-directory: ./WORKER
+        run: |
+          yarn install --frozen-lockfile
+          yarn run build
