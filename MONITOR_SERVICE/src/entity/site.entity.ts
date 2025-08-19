@@ -23,6 +23,7 @@ export class Site extends GlobalEntity {
   @OneToMany(() => SiteApi, (siteApi) => siteApi.site, { cascade: true, nullable: true })
   siteApis!: SiteApi[] | undefined | null;
 
+  @Index()
   @Column()
   userId!: string;
 

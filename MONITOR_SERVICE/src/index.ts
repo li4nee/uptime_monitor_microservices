@@ -14,6 +14,7 @@ import { logger } from "./utils/logger.utils";
 import * as promClient from "prom-client";
 import { scheduleMonitorJob } from "./lib/queue/jobSchedularCron.queue";
 import { monitorV1HistoryRouter } from "./modules/monitor_v1/monitoringHistory/monitorV1History.route";
+import { scheduleSLAReportJob } from "./lib/queue/slaReport.queue";
 dotenv.config();
 
 const app = express();
@@ -76,6 +77,8 @@ app.listen(GlobalSettings.port, "0.0.0.0", async () => {
       // await import("./lib/workers/jobSchedularCron.worker");
       // await import("./lib/workers/SiteMonitorWorker.worker");
       // await import("./lib/workers/SaveMonitoringHistory.worker");
+      await scheduleSLAReportJob();
+      await import("./lib/workers/siteSLA.worker");
     })
     .catch((error) => {
       logger.error("DB connection error", {

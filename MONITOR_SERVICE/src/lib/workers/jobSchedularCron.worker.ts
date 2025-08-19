@@ -18,6 +18,7 @@ const monitorWorker = new Worker(
   },
   {
     connection: IoRedisClientForBullMQ,
+    concurrency: 2,
   },
 );
 

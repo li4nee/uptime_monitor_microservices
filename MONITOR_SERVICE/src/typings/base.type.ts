@@ -49,6 +49,18 @@ export interface SiteMonitorDTO {
   };
 }
 
+export interface SLAReportMonitorinHistoryDto {
+  siteId: string;
+  total: number;
+  up: number;
+  down: number;
+  avgResponseTime: number;
+  maxResponseTime: number;
+  minResponseTime: number;
+  slowResponseCount: number;
+  maxDownTime: number;
+}
+
 export class CustomError {
   statusCode: number;
   message: string | null;

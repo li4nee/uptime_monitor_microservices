@@ -3,15 +3,12 @@ import { SiteApiModel } from "../../../repo/siteApi.repo";
 import { SiteMonitoringHistoryModel } from "../../../repo/siteHistory.repo";
 import { DefaultResponse, InvalidInputError, ResourceNotFoundError } from "../../../typings/base.type";
 import { getPaginationValues } from "../../../utils/base.utils";
+import { cacheUtils } from "../../../utils/cache.utils";
 import { logger } from "../../../utils/logger.utils";
 import { GetMonitoringHisoryDto, GetOneMonthOverviewDto } from "./monitorV1History.dto";
 
 class MonitorHistoryServiceClass {
-  constructor(
-    private readonly siteModel = SiteModel,
-    private readonly siteApiModel = SiteApiModel,
-    private readonly siteHistoryModel = SiteMonitoringHistoryModel,
-  ) {}
+  constructor(private readonly siteHistoryModel = SiteMonitoringHistoryModel) {}
 
   async getMonitoringHistory(query: GetMonitoringHisoryDto, userId: string): Promise<DefaultResponse> {
     if (!userId) throw new InvalidInputError("User ID is required to fetch monitoring history");
@@ -100,6 +97,14 @@ class MonitorHistoryServiceClass {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0); // Last day of the month
     if (startDate.getTime() > Date.now()) throw new InvalidInputError("Dates cannot be in the future");
+    let key = `oneMonthOverview:${siteId}:${siteApiId}:${userId}:${yearAndMonth}`;
+    const cachedOverview = await cacheUtils.getCache(key);
+    if (cachedOverview) {
+      return new DefaultResponse(200, "One month overview fetched successfully from cache", {
+        overview: cachedOverview,
+        pagination: null,
+      });
+    }
     const queryBuilder = this.siteHistoryModel
       .createQueryBuilder("history")
       .innerJoin("history.siteApi", "siteApi")
@@ -173,6 +178,24 @@ class MonitorHistoryServiceClass {
       calendarLength: calendar.length,
       timestamp: new Date().toISOString(),
     });
+
+    // SAME MONTH CHA BAHNE 5 MINS CACHE HANDIM ANI PURANO MONTH CHA BHANE TAH JATTI STALE BHAYENI KEI FARAK PARDAINA
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const cacheDuration = year === currentYear && month === currentMonth ? 5 * 60 : 24 * 60 * 60;
+
+    await cacheUtils.setCache(
+      key,
+      {
+        averageResponseTime,
+        upCount,
+        downCount,
+        totalResponseTime,
+        calendar,
+      },
+      cacheDuration,
+    );
     return new DefaultResponse(200, "One month overview fetched successfully", {
       overview: {
         averageResponseTime,

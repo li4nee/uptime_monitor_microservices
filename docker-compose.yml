@@ -27,6 +27,8 @@ services:
     image: redis:latest
     container_name: redis_uptimemonitor
     restart: always
+    # YO CHAI MAILE REDIS LE GARDA RAM FULL NA HOS BHANERA SETUP HANYA HO
+    command: ["redis-server", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - ./redis:/data
     networks:
