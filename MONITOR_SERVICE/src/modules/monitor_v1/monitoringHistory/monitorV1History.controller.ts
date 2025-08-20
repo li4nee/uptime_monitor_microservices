@@ -1,20 +1,33 @@
 import { AuthenticatedRequest } from "../../../typings/base.type";
 import { Response } from "express";
-import { GetMonitoringHisoryDto, GetMonitoringHisoryDtoSchema, GetOneMonthOverviewDto, GetOneMonthOverviewDtoSchema } from "./monitorV1History.dto";
+import {
+  GetMonitoringHisoryDto,
+  GetMonitoringHisoryDtoSchema,
+  GetOneMonthOverviewDto,
+  GetOneMonthOverviewDtoSchema,
+  GetSLAReportHistoryDto,
+  GetSLAReportHistoryDtoSchema,
+} from "./monitorV1History.dto";
 import { MonitorHistoryService } from "./monitorV1History.service";
 
 class MonitorHistoryControllerClass {
   constructor(private readonly monitorHistoryService = MonitorHistoryService) {}
 
   async getMonitoringHistory(req: AuthenticatedRequest, res: Response) {
-    let body: GetMonitoringHisoryDto = await GetMonitoringHisoryDtoSchema.validate(req.query);
-    let result = await this.monitorHistoryService.getMonitoringHistory(body, req.userId);
+    let query: GetMonitoringHisoryDto = await GetMonitoringHisoryDtoSchema.validate(req.query);
+    let result = await this.monitorHistoryService.getMonitoringHistory(query, req.userId);
     res.status(200).json(result);
   }
 
   async getOneMonthOverview(req: AuthenticatedRequest, res: Response) {
-    let body: GetOneMonthOverviewDto = await GetOneMonthOverviewDtoSchema.validate(req.query);
-    let result = await this.monitorHistoryService.getOneMonthOverview(body, req.userId);
+    let query: GetOneMonthOverviewDto = await GetOneMonthOverviewDtoSchema.validate(req.query);
+    let result = await this.monitorHistoryService.getOneMonthOverview(query, req.userId);
+    res.status(200).json(result);
+  }
+
+  async getSLAreportHistory(req: AuthenticatedRequest, res: Response) {
+    let query: GetSLAReportHistoryDto = await GetSLAReportHistoryDtoSchema.validate(req.query);
+    let result = await this.monitorHistoryService.getSLAreportHistory(query, req.userId);
     res.status(200).json(result);
   }
 }

@@ -6,13 +6,14 @@ import { Site } from "./entity/site.entity";
 import { SiteApi } from "./entity/siteApi.entity";
 import { SiteMonitoringHistory } from "./entity/siteMonitoringHistory.entity";
 import { siteNotificationSetting } from "./entity/siteNotificationSetting.entity";
+import { SiteSLAReport } from "./entity/siteDailySLAReport.entity";
 
 const dataStoreOptions: DataSourceOptions = {
   type: "postgres",
   url: GlobalSettings.database.url,
   synchronize: false,
   logging: false,
-  entities: [Site, SiteApi, SiteMonitoringHistory, siteNotificationSetting],
+  entities: [Site, SiteApi, SiteMonitoringHistory, siteNotificationSetting, SiteSLAReport],
   migrations: [__dirname + "/migrations/**/*.{js,ts}"],
   extra: {
     connectionLimit: 25,

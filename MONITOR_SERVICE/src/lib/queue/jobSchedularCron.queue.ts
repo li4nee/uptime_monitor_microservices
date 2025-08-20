@@ -13,14 +13,14 @@ export async function scheduleMonitorJob() {
       {},
       {
         repeat: {
-          every: 2 * 60 * 1000, // Every 2 minutes
+          every: 1 * 60 * 1000,
         },
         removeOnComplete: true,
         removeOnFail: true,
         jobId: "singleton-monitor-job",
       },
     );
-    logger.info("Scheduled monitor job to run every 2 minutes");
+    logger.info("Scheduled monitor job to run every 1 minutes");
   } catch (error) {
     logger.error("Failed to schedule monitor job", { error });
   }

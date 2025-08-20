@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import * as yup from "yup";
 import { AuthenticatedRequest, CustomError } from "../typings/base.type";
 import path from "path";
+import Redis from "ioredis";
 
 export const generateId = (length: number = 20): string => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
