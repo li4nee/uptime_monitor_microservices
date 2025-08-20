@@ -50,15 +50,15 @@ export interface SiteMonitorDTO {
 }
 
 export interface SLAReportMonitorinHistoryDto {
-  siteId: string;
+  siteid: string;
   total: number;
   up: number;
   down: number;
-  avgResponseTime: number;
-  maxResponseTime: number;
-  minResponseTime: number;
-  slowResponseCount: number;
-  maxDownTime: number;
+  avgresponsetime: number;
+  maxresponsetime: number;
+  minresponsetime: number;
+  slowresponsecount: number;
+  maxdowntime?: number;
 }
 
 export class CustomError {

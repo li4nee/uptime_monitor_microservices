@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index } from "typeorm";
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index, JoinColumn } from "typeorm";
 import { Site } from "./site.entity";
 import { SiteApi } from "./siteApi.entity";
 import { GlobalEntity } from "./global.entity";
@@ -9,6 +9,7 @@ export class SiteSLAReport extends GlobalEntity {
   id!: string;
 
   @ManyToOne(() => Site)
+  @JoinColumn()
   site!: Site;
 
   @Column()

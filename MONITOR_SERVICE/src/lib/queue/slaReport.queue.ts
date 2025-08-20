@@ -13,14 +13,15 @@ export async function scheduleSLAReportJob() {
       {},
       {
         repeat: {
-          every: 60 * 1000,
+          pattern: "0 0 * * *",
+          tz: "Asia/Kathmandu",
         },
         removeOnComplete: true,
         removeOnFail: true,
         jobId: "daily-sla-report-job",
       },
     );
-    logger.info("Scheduled daily SLA report job to run at midnight");
+    logger.info("Scheduled daily SLA report job to run" + " at midNight : " + new Date());
   } catch (error) {
     logger.error("Failed to schedule SLA report job", { error });
   }

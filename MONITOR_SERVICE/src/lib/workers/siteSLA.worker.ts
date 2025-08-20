@@ -7,6 +7,7 @@ import { SiteMonitoringHistory } from "../../entity/siteMonitoringHistory.entity
 import { Between } from "typeorm";
 import { SLAReportMonitorinHistoryDto } from "../../typings/base.type";
 import { SiteSLAReport } from "../../entity/siteDailySLAReport.entity";
+import { Site } from "../../entity/site.entity";
 
 class SiteSLAWorker {
   private worker: Worker;
@@ -61,8 +62,9 @@ class SiteSLAWorker {
     try {
       const aggregated = await this.siteMonitoringHistoryModel
         .createQueryBuilder("history")
+        .innerJoin("history.site", "site")
         .select([
-          "history.siteId AS siteId",
+          "site.id AS siteId",
           "COUNT(*) AS total",
           "SUM(CASE WHEN history.status = 'UP' THEN 1 ELSE 0 END) AS up",
           "SUM(CASE WHEN history.status = 'DOWN' THEN 1 ELSE 0 END) AS down",
@@ -72,7 +74,7 @@ class SiteSLAWorker {
           "SUM(CASE WHEN history.responseTime > 1000 THEN 1 ELSE 0 END) AS slowResponseCount",
         ])
         .where("history.checkedAt BETWEEN :start AND :end", { start: startTime, end: endTime })
-        .groupBy("history.siteId")
+        .groupBy("siteId")
         .getRawMany();
 
       return aggregated;
@@ -84,17 +86,17 @@ class SiteSLAWorker {
 
   private createSlaReport(history: SLAReportMonitorinHistoryDto, startTime: Date, endTime: Date): SiteSLAReport {
     const slaReport = new SiteSLAReport();
-    slaReport.site = { id: history.siteId } as any;
+    slaReport.site = { id: history.siteid } as Site;
     slaReport.periodStart = startTime;
     slaReport.periodEnd = endTime;
-    slaReport.totalChecks = history.total;
-    slaReport.upChecks = history.up;
-    slaReport.downChecks = history.down;
-    slaReport.averageResponseTime = history.avgResponseTime;
-    slaReport.uptimePercentage = (history.up / history.total) * 100 || 0;
-    slaReport.maxResponseTime = history.maxResponseTime;
-    slaReport.minResponseTime = history.minResponseTime;
-    slaReport.slowResponseCount = history.slowResponseCount;
+    slaReport.totalChecks = Number(history.total);
+    slaReport.upChecks = Number(history.up);
+    slaReport.downChecks = Number(history.down);
+    slaReport.averageResponseTime = Number(history.avgresponsetime);
+    slaReport.uptimePercentage = (Number(history.up) / Number(history.total)) * 100 || 0;
+    slaReport.maxResponseTime = Number(history.maxresponsetime);
+    slaReport.minResponseTime = Number(history.minresponsetime);
+    slaReport.slowResponseCount = Number(history.slowresponsecount);
     return slaReport;
   }
 

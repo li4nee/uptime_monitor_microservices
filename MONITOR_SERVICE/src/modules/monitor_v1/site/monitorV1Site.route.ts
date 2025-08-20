@@ -55,23 +55,31 @@ monitorV1SiteRouter.post("/", Wrapper(MonitorController.registerSiteMonitor.bind
  * /monitor/v1/sites/:
  *   get:
  *     summary: Get monitoring sites and their APIs
- *     description: >
- *       This endpoint returns one of four response shapes depending on query parameters:
- *       1. No `siteId` or `siteApiId`: Returns a paginated list of monitoring sites.
- *       2. Only `siteApiId`: Returns details of a single API along with its site info.
- *       3. Only `siteId`: Returns details of a single site along with its paginated APIs.
- *       4. Both `siteId` and `siteApiId`: Returns details of a single site and a single API belonging to it.
+ *     description: |
+ *       This endpoint returns monitoring site(s) and their API(s) based on the query parameters provided.
+ *       The response shape varies depending on the combination of `siteId` and `siteApiId`:
  *
- *       Use query parameters to specify which response you want:
- *       - `siteId` (string) - fetch a single site and its APIs
- *       - `siteApiId` (string) - fetch a single API and its site info
- *       - `page`, `limit` (integers) for pagination when fetching lists or APIs
+ *       1. **No `siteId` or `siteApiId` provided** → Returns a paginated list of all monitoring sites.
+ *       2. **Only `siteApiId` provided** → Returns details of a single API along with its parent site info.
+ *       3. **Only `siteId` provided** → Returns details of a single site and a paginated list of its APIs.
+ *       4. **Both `siteId` and `siteApiId` provided** → Returns a single site and the specified API belonging to it.
  *
- *       Example queries:
- *       - `/monitor/v1/sites` — paginated sites list
- *       - `/monitor/v1/sites?siteId=abc123` — single site with APIs
- *       - `/monitor/v1/sites?siteApiId=api456` — single API with site info
- *       - `/monitor/v1/sites?siteId=abc123&siteApiId=api456` — single site with specific API
+ *       **Query parameters:**
+ *       - `siteId` (string): Fetch a specific site and its APIs.
+ *       - `siteApiId` (string): Fetch a specific API and its site info.
+ *       - `page`, `limit` (integers): Pagination for lists or APIs.
+ *       - `isActive` (boolean): Filter by active status (optional).
+ *       - `priority` (integer, 1-4): Filter APIs by priority (optional).
+ *       - `order` (string, ASC|DESC): Sort order, default is DESC.
+ *       - `orderBy` (string, createdAt|url): Field to sort by, default is createdAt.
+ *       - `search` (string): Search term to filter sites by URL, name, or endpoint (optional).
+ *       - `httpMethod` (string, GET|POST|PUT|PATCH|DELETE): Filter APIs by HTTP method (optional).
+ *
+ *       **Example queries:**
+ *       - `/monitor/v1/sites` → Paginated list of sites
+ *       - `/monitor/v1/sites?siteId=abc123` → Single site with its APIs
+ *       - `/monitor/v1/sites?siteApiId=api456` → Single API with its site info
+ *       - `/monitor/v1/sites?siteId=abc123&siteApiId=api456` → Single site with specific API
  *
  *     tags: [Monitor V1 Sites]
  *     security:
@@ -94,7 +102,7 @@ monitorV1SiteRouter.post("/", Wrapper(MonitorController.registerSiteMonitor.bind
  *           type: integer
  *           default: 0
  *           minimum: 0
- *         description: Page number for pagination (default 0)
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         schema:
@@ -102,36 +110,36 @@ monitorV1SiteRouter.post("/", Wrapper(MonitorController.registerSiteMonitor.bind
  *           default: 10
  *           minimum: 1
  *           maximum: 20
- *         description: Number of items per page (default 10)
+ *         description: Number of items per page
  *       - in: query
  *         name: order
  *         schema:
  *           type: string
  *           enum: [ASC, DESC]
  *           default: DESC
- *         description: Sort order (default DESC)
+ *         description: Sort order
  *       - in: query
  *         name: orderBy
  *         schema:
  *           type: string
  *           enum: [createdAt, url]
  *           default: createdAt
- *         description: Field to sort by (default createdAt)
+ *         description: Field to sort by
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Search term to filter sites by URL or name or endpoint (optional)
+ *         description: Search term to filter sites by URL, name, or endpoint
  *       - in: query
  *         name: siteId
  *         schema:
  *           type: string
- *         description: Site ID to fetch a single site with APIs (optional)
+ *         description: Fetch a single site with its APIs (optional)
  *       - in: query
  *         name: siteApiId
  *         schema:
  *           type: string
- *         description: Site API ID to fetch a single API with site info (optional)
+ *         description: Fetch a single API with site info (optional)
  *       - in: query
  *         name: httpMethod
  *         schema:
@@ -140,7 +148,7 @@ monitorV1SiteRouter.post("/", Wrapper(MonitorController.registerSiteMonitor.bind
  *         description: HTTP method filter (optional)
  *     responses:
  *       200:
- *         description: Monitoring routes fetched successfully. Response shape depends on query parameters.
+ *         description: Monitoring sites and APIs fetched successfully. Response shape depends on query parameters.
  *         content:
  *           application/json:
  *             schema:

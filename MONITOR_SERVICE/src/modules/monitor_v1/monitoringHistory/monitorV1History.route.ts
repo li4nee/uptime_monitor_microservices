@@ -298,4 +298,136 @@ monitorV1HistoryRouter.get("/", Wrapper(MonitorHistoryController.getMonitoringHi
  */
 monitorV1HistoryRouter.get("/monthly-overview", Wrapper(MonitorHistoryController.getOneMonthOverview.bind(MonitorHistoryController)));
 
+/**
+ * @swagger
+ * /monitor/v1/history/sla-report-history:
+ *   get:
+ *     summary: Get SLA Report(s) history
+ *     description: >
+ *       Fetch SLA reports for a specific site or a single report by `reportId`.
+ *
+ *       - If `reportId` is provided → returns a single SLA report.
+ *       - Otherwise → returns paginated SLA report history for a site.
+ *     tags:
+ *       - SLA Reports
+ *     parameters:
+ *       - in: query
+ *         name: reportId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Unique ID of the SLA report (if provided, `siteId` is ignored).
+ *       - in: query
+ *         name: siteId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Site ID for fetching SLA report history (required if `reportId` is not provided).
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: false
+ *         description: Filter SLA reports created **after** this date.
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: false
+ *         description: Filter SLA reports created **before** this date.
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 0
+ *         description: Page number for pagination.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 20
+ *           default: 10
+ *         description: Number of reports per page.
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *         description: Sort order of results.
+ *       - in: query
+ *         name: orderBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, totalChecks, upChecks, downChecks, uptimePercentage]
+ *           default: createdAt
+ *         description: Field to sort results by.
+ *     responses:
+ *       200:
+ *         description: SLA report(s) fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: SLA report history fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     report:
+ *                       type: object
+ *                       nullable: true
+ *                       description: Single SLA report (if `reportId` is provided)
+ *                       properties:
+ *                         id: { type: string, example: "d1f9a8b2-3c44-4f12-91a2-bf8d3c76e21c" }
+ *                         periodStart: { type: string, format: date-time, example: "2025-08-01T00:00:00.000Z" }
+ *                         periodEnd: { type: string, format: date-time, example: "2025-08-07T23:59:59.999Z" }
+ *                         createdAt: { type: string, format: date-time, example: "2025-08-07T23:59:59.999Z" }
+ *                         totalChecks: { type: integer, example: 1000 }
+ *                         upChecks: { type: integer, example: 980 }
+ *                         downChecks: { type: integer, example: 20 }
+ *                         uptimePercentage: { type: number, format: float, example: 98.0 }
+ *                         averageResponseTime: { type: number, format: float, example: 245.32 }
+ *                         maxResponseTime: { type: number, format: float, example: 842.76 }
+ *                         minResponseTime: { type: number, format: float, example: 123.45 }
+ *                         slowResponseCount: { type: integer, example: 15 }
+ *                     reports:
+ *                       type: array
+ *                       description: List of SLA reports (if fetching history)
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: string, example: "rep_123" }
+ *                           periodStart: { type: string, format: date-time }
+ *                           periodEnd: { type: string, format: date-time }
+ *                           createdAt: { type: string, format: date-time }
+ *                           totalChecks: { type: integer, example: 1000 }
+ *                           uptimePercentage: { type: number, format: float, example: 98.0 }
+ *                     pagination:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         total: { type: integer, example: 50 }
+ *                         page: { type: integer, example: 0 }
+ *                         totalPages: { type: integer, example: 5 }
+ *                         limit: { type: integer, example: 10 }
+ *       400:
+ *         description: Invalid input (e.g. missing siteId, invalid date range)
+ *       404:
+ *         description: SLA report(s) not found
+ *       500:
+ *         description: Internal server error
+ */
+
+monitorV1HistoryRouter.get("/sla-report-history", Wrapper(MonitorHistoryController.getSLAreportHistory.bind(MonitorHistoryController)));
+
 export { monitorV1HistoryRouter };
