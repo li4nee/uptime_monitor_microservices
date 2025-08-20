@@ -236,7 +236,7 @@ class MonitorHistoryServiceClass {
     let firstPageKey = `paginatedSlaReportModel-siteId:${query.siteId}`;
     const shouldCache = this.isDefaultFirstPage(query);
     if (shouldCache) {
-      console.log("cache hit hai hit")
+      console.log("cache hit hai hit");
       const cached = await cacheUtils.getCache(firstPageKey);
       if (cached) return new DefaultResponse(200, "SLA report history fetched successfully", cached);
     }
