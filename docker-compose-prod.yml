@@ -1,0 +1,160 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - internal
+  
+  redis:
+    image: redis:latest
+    restart: always
+    command: ["redis-server", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+  
+  prom-server:
+    image: prom/prometheus:v3.5.0
+    restart: always
+    volumes:
+      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - public
+      - internal
+  
+  grafana:
+    image: grafana/grafana:10.2.1
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prom-server
+    networks:
+      - public
+
+  loki:
+    image: grafana/loki:2.9.0
+    restart: always
+    ports:
+      - "3100:3100"
+    networks:
+      - public
+
+  api-gateway:
+    build:
+      context: ./API_GATEWAY
+      dockerfile: dockerfile.prod
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    depends_on:
+      - user-service
+      - monitor-service
+      - worker
+    networks:
+      - public
+      - internal
+
+  user-service:
+    build:
+      context: ./USER_SERVICE
+      dockerfile: dockerfile.prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - internal
+
+  monitor-service:
+    build:
+      context: ./MONITOR_SERVICE
+      dockerfile: dockerfile.prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_QUEUE_EMAIL: ${RABBITMQ_QUEUE_EMAIL}
+      RABBITMQ_ROUTING_KEY_EMAIL: ${RABBITMQ_ROUTING_KEY_EMAIL}
+      RABBITMQ_QUEUE_SLACK: ${RABBITMQ_QUEUE_SLACK}
+      RABBITMQ_ROUTING_KEY_SLACK: ${RABBITMQ_ROUTING_KEY_SLACK}
+      RABBITMQ_QUEUE_DISCORD: ${RABBITMQ_QUEUE_DISCORD}
+      RABBITMQ_ROUTING_KEY_DISCORD: ${RABBITMQ_ROUTING_KEY_DISCORD}
+      REDIS_URL: ${REDIS_URL}
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - internal
+      - public
+
+  worker:
+    build:
+      context: ./WORKER
+      dockerfile: dockerfile.prod
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_QUEUE_EMAIL: ${RABBITMQ_QUEUE_EMAIL}
+      RABBITMQ_ROUTING_KEY_EMAIL: ${RABBITMQ_ROUTING_KEY_EMAIL}
+      RABBITMQ_QUEUE_SLACK: ${RABBITMQ_QUEUE_SLACK}
+      RABBITMQ_ROUTING_KEY_SLACK: ${RABBITMQ_ROUTING_KEY_SLACK}
+      RABBITMQ_QUEUE_DISCORD: ${RABBITMQ_QUEUE_DISCORD}
+      RABBITMQ_ROUTING_KEY_DISCORD: ${RABBITMQ_ROUTING_KEY_DISCORD}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+    networks:
+      - internal
+      - public
+
+volumes:
+  pgdata:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  public:
+  internal:
+    internal: true
