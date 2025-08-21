@@ -4,6 +4,7 @@ const GlobalSettings = {
   database: {
     url: process.env.DATABASE_URL,
   },
+  NODE_ENVIRONMENT: process.env.NODE_ENV || "DEVELOPMENT",
   port: Number(3002),
   redis: {
     url: process.env.REDIS_URL || "redis://redis:6379",

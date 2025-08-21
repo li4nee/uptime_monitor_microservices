@@ -5,6 +5,7 @@ const GlobalSettings = {
   database: {
     url: process.env.DATABASE_URL,
   },
+  NODE_ENVIRONMENT: process.env.NODE_ENV || "DEVELOPMENT",
   port: Number(3001),
   JWT_SECRET: process.env.JWT_SECRET || "miccheck1212miccheck1212",
   JWT_EXPIRY: process.env.JWT_EXPIRY || "1h",

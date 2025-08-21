@@ -12,8 +12,9 @@
     "mig:create": "typeorm migration:create ",
     "test": "jest --detectOpenHandles --forceExit",
     "test:coverage": "jest --coverage --watchAll --detectOpenHandles",
-    "build": "tsc --project tsconfig.json",
-    "start:prod": "node dist/src/index.js"
+    "build": "tsc --project tsconfig.build.json",
+    "start:prod": "NODE_ENVIRONMENT=PRODUCTION node ./dist/index.js"
+
   },
   "dependencies": {
     "amqplib": "^0.10.8",
