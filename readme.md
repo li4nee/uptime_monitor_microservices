@@ -2,7 +2,7 @@
 A backend system for monitoring website's and it's APIS uptime, sending notifications via Email, Slack, and Discord, and storing metrics for reporting and SLA calculations.
 
 ### System Architecture
-![Overall architecture](image-2.png)
+![Overall architecture](image.png)
 ![Logs and metrics](image-1.png)
 
 ### Environment Variables (.env)
@@ -55,4 +55,7 @@ This project includes a **Makefile** to simplify Docker and development tasks.
 | `make upwithlogs`  | Start services (dev mode, using `.env-development`) and follow logs for `api-gateway`, `user-service`, `monitor-service`, and `worker`. Stops on `CTRL+C`. |
 | `make upwithlogsprod` | Start services in **production mode** (using `docker-compose-prod.yml`) and follow logs. |
 | `make lint`        | Run **Prettier** to format all TypeScript files across services.            |
+
+
+### Check the `alertmanager.yml.template` file , rename it to `alertmanager.yml` and replace your slack webhook to integrate alerts when any service goes down.
 

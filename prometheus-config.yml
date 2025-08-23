@@ -4,7 +4,7 @@ global:
 scrape_configs:
   - job_name: "API_GATEWAY"
     static_configs:
-      - targets: ["api-gateway:3000"]
+      - targets: ["api-gateway:4000"]
   - job_name: "USER_SERVICE"
     static_configs:
       - targets: ["user-service:3001"]
@@ -13,4 +13,14 @@ scrape_configs:
       - targets: ["monitor-service:3002"]
   - job_name: "WORKER"
     static_configs:
-      - targets: ['pushgateway:9091']
+      - targets: ['worker:3003']
+
+rule_files:
+  - "alert.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
