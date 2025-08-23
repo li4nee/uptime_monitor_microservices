@@ -10,5 +10,6 @@ pgdata
 logs/
 log/
 
+alertmanager.yml
 # Coverage reports
 coverage/

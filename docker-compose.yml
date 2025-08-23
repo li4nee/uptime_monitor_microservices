@@ -33,6 +33,18 @@ services:
       - ./redis:/data
     networks:
       - internal
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    env_file:
+      - .env-development
+    ports:
+      - "9093:9093"
+    networks:
+      - internal
+      - public
   
   prom-server:
     image: prom/prometheus
@@ -52,18 +64,19 @@ services:
       - prom-server
     networks:
       - public
+      - internal
 
   loki:
     image: grafana/loki
-    ports:
-      - "3100:3100"
     networks:
-      - public
+      - internal
 
   api-gateway:
     build: ./API_GATEWAY
     volumes:
       - ./API_GATEWAY:/app
+    env_file:
+      - .env-development
     ports:
       - "4000:4000"
     depends_on:
@@ -78,9 +91,8 @@ services:
     build: ./USER_SERVICE
     volumes:
       - ./USER_SERVICE:/app
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - .env-development
     depends_on:
       postgres:
         condition: service_started
@@ -95,17 +107,8 @@ services:
     build: ./MONITOR_SERVICE
     volumes:
       - ./MONITOR_SERVICE:/app
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - RABBITMQ_URL=${RABBITMQ_URL}
-      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
-      - RABBITMQ_QUEUE_EMAIL=${RABBITMQ_QUEUE_EMAIL}
-      - RABBITMQ_ROUTING_KEY_EMAIL=${RABBITMQ_ROUTING_KEY_EMAIL}
-      - RABBITMQ_QUEUE_SLACK=${RABBITMQ_QUEUE_SLACK}
-      - RABBITMQ_ROUTING_KEY_SLACK=${RABBITMQ_ROUTING_KEY_SLACK}
-      - RABBITMQ_QUEUE_DISCORD=${RABBITMQ_QUEUE_DISCORD}
-      - RABBITMQ_ROUTING_KEY_DISCORD=${RABBITMQ_ROUTING_KEY_DISCORD}
-      - REDIS_URL=${REDIS_URL}
+    env_file:
+      - .env-development
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -121,18 +124,8 @@ services:
     build: ./WORKER
     volumes:
       - ./WORKER:/app
-    environment:
-      - RABBITMQ_URL=${RABBITMQ_URL}
-      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
-      - RABBITMQ_QUEUE_EMAIL=${RABBITMQ_QUEUE_EMAIL}
-      - RABBITMQ_ROUTING_KEY_EMAIL=${RABBITMQ_ROUTING_KEY_EMAIL}
-      - RABBITMQ_QUEUE_SLACK=${RABBITMQ_QUEUE_SLACK}
-      - RABBITMQ_ROUTING_KEY_SLACK=${RABBITMQ_ROUTING_KEY_SLACK}
-      - RABBITMQ_QUEUE_DISCORD=${RABBITMQ_QUEUE_DISCORD}
-      - RABBITMQ_ROUTING_KEY_DISCORD=${RABBITMQ_ROUTING_KEY_DISCORD}
-      - MAIL_HOST=${MAIL_HOST}
-      - MAIL_USER=${MAIL_USER}
-      - MAIL_PASS=${MAIL_PASS}
+    env_file:
+      - .env-development
     depends_on:
       rabbitmq:
         condition: service_healthy
