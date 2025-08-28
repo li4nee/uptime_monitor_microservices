@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:15
-    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -26,25 +25,12 @@ services:
   redis:
     image: redis:latest
     container_name: redis_uptimemonitor
-    restart: always
     # YO CHAI MAILE REDIS LE GARDA RAM FULL NA HOS BHANERA SETUP HANYA HO
     command: ["redis-server", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - ./redis:/data
     networks:
       - internal
-
-  alertmanager:
-    image: prom/alertmanager:latest
-    volumes:
-      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
-    env_file:
-      - .env-development
-    ports:
-      - "9093:9093"
-    networks:
-      - internal
-      - public
   
   prom-server:
     image: prom/prometheus
@@ -52,16 +38,6 @@ services:
       - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
-    networks:
-      - public
-      - internal
-  
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prom-server
     networks:
       - public
       - internal

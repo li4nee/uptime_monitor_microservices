@@ -1,6 +1,8 @@
 import { AuthenticatedRequest } from "../../../typings/base.type";
 import { Response } from "express";
 import {
+  GetApiPerformanceHistoryOverviewDto,
+  getApiPerformanceHistoryOverviewDtoSchema,
   GetMonitoringHisoryDto,
   GetMonitoringHisoryDtoSchema,
   GetOneMonthOverviewDto,
@@ -28,6 +30,12 @@ class MonitorHistoryControllerClass {
   async getSLAreportHistory(req: AuthenticatedRequest, res: Response) {
     let query: GetSLAReportHistoryDto = await GetSLAReportHistoryDtoSchema.validate(req.query);
     let result = await this.monitorHistoryService.getSLAreportHistory(query, req.userId);
+    res.status(200).json(result);
+  }
+
+  async getApiPerformanceHistory(req: AuthenticatedRequest, res: Response) {
+    let query: GetApiPerformanceHistoryOverviewDto = await getApiPerformanceHistoryOverviewDtoSchema.validate(req.query);
+    let result = await this.monitorHistoryService.getApiPerformanceHistory(query, req.userId);
     res.status(200).json(result);
   }
 }

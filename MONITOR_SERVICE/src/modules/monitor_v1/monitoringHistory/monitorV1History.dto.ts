@@ -65,3 +65,14 @@ export const GetSLAReportHistoryDtoSchema = yup.object().shape({
   order: yup.string().oneOf(["ASC", "DESC"]).default("DESC"),
   orderBy: yup.string().oneOf(["createdAt", "totalChecks", "upChecks", "downChecks", "uptimePercentage"]).default("createdAt"),
 });
+
+export interface GetApiPerformanceHistoryOverviewDto {
+  siteId: string;
+  siteApiId: string;
+  date: Date;
+}
+export const getApiPerformanceHistoryOverviewDtoSchema = yup.object().shape({
+  siteId: yup.string().required(),
+  siteApiId: yup.string().required(),
+  date: yup.date().required(),
+});

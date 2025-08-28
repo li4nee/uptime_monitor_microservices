@@ -430,4 +430,102 @@ monitorV1HistoryRouter.get("/monthly-overview", Wrapper(MonitorHistoryController
 
 monitorV1HistoryRouter.get("/sla-report-history", Wrapper(MonitorHistoryController.getSLAreportHistory.bind(MonitorHistoryController)));
 
+/**
+ * @swagger
+ * /monitor/api-performance-history:
+ *   get:
+ *     tags:
+ *       - MonitorHistory
+ *     summary: Get API performance history for a specific API of a site
+ *     description: Returns response times and status codes for an API for a given date. Each entry represents a 1-minute check.
+ *     parameters:
+ *       - in: query
+ *         name: siteId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the site
+ *       - in: query
+ *         name: siteApiId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the API belonging to the site
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: true
+ *         description: The date for which to fetch API performance history (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: API performance history fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "API performance history fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     performanceHistory:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           checkedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-08-28T08:00:00Z"
+ *                             description: Timestamp of the API check
+ *                           responseTime:
+ *                             type: number
+ *                             example: 120
+ *                             description: Response time in milliseconds
+ *                           statusCode:
+ *                             type: integer
+ *                             example: 200
+ *                             description: HTTP status code of the API response
+ *                 pagination:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         description: Invalid input or missing query parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: No API performance history found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * components:
+ *   schemas:
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         statusCode:
+ *           type: integer
+ *           example: 404
+ *         message:
+ *           type: string
+ *           example: "No API performance history found for the given API on the specified date"
+ *         errors:
+ *           type: array
+ *           items:
+ *             type: string
+ *           nullable: true
+ */
+monitorV1HistoryRouter.get("/api-performance-history", Wrapper(MonitorHistoryController.getApiPerformanceHistory.bind(MonitorHistoryController)));
+
 export { monitorV1HistoryRouter };

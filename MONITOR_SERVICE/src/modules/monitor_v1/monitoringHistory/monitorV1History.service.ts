@@ -6,7 +6,7 @@ import { DefaultResponse, InvalidInputError, ResourceNotFoundError } from "../..
 import { getPaginationValues } from "../../../utils/base.utils";
 import { cacheUtils } from "../../../utils/cache.utils";
 import { logger } from "../../../utils/logger.utils";
-import { GetMonitoringHisoryDto, GetOneMonthOverviewDto, GetSLAReportHistoryDto } from "./monitorV1History.dto";
+import { GetApiPerformanceHistoryOverviewDto, GetMonitoringHisoryDto, GetOneMonthOverviewDto, GetSLAReportHistoryDto } from "./monitorV1History.dto";
 
 class MonitorHistoryServiceClass {
   constructor(
@@ -293,6 +293,31 @@ class MonitorHistoryServiceClass {
     });
 
     return new DefaultResponse(200, "SLA report history fetched successfully", responseData);
+  }
+
+  async getApiPerformanceHistory(query: GetApiPerformanceHistoryOverviewDto, userId: string): Promise<DefaultResponse> {
+    let { siteId, siteApiId, date } = query;
+    if (!userId) throw new InvalidInputError("User ID is required to fetch API performance history");
+    if (!(siteId && siteApiId)) throw new InvalidInputError("Both siteId and siteApiId are required");
+    this.checkDateValidity(date, undefined, false);
+    let result = await this.siteHistoryModel
+      .createQueryBuilder("history")
+      .innerJoin("history.siteApi", "siteApi")
+      .innerJoin("history.site", "site")
+      .where("site.id = :siteId", { siteId })
+      .andWhere("siteApi.id = :siteApiId", { siteApiId })
+      .andWhere("site.userId = :userId", { userId })
+      .andWhere("DATE(history.checkedAt) = :date", { date: date.toISOString().split("T")[0] })
+      .select(["history.id", "history.responseTime as responseTime", "history.checkedAt as checkedAt", "history.statusCode as statusCode"])
+      .orderBy("history.checkedAt", "ASC")
+      .getRawMany();
+    if (result.length === 0) throw new ResourceNotFoundError("No API performance history found for the given API on the specified date", true);
+    let response = result.map((item) => ({
+      checkedAt: item.checkedAt,
+      responseTime: item.responseTime,
+      statusCode: item.statusCode,
+    }));
+    return new DefaultResponse(200, "API performance history fetched successfully", { data: { performanceHistory: response }, pagination: null });
   }
 
   private checkDateValidity(startDate?: Date, endDate?: Date, requiresBoth: boolean = false): void {
