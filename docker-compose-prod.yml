@@ -86,6 +86,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "4000:4000"
+    restart: always 
     depends_on:
       - user-service
       - monitor-service
@@ -98,6 +99,7 @@ services:
     build:
       context: ./USER_SERVICE
       dockerfile: dockerfile.prod
+    restart: always
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
@@ -116,6 +118,7 @@ services:
     build:
       context: ./MONITOR_SERVICE
       dockerfile: dockerfile.prod
+    restart: always
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
@@ -143,6 +146,7 @@ services:
     build:
       context: ./WORKER
       dockerfile: dockerfile.prod
+    restart: always
     environment:
       NODE_ENV: production
       RABBITMQ_URL: ${RABBITMQ_URL}
