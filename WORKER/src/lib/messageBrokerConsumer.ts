@@ -110,50 +110,84 @@ export class MessageBrokerConsumer {
       throw new InternalServerError(msg);
     }
 
-    logger.info("Starting message consumption...");
+    const retryWithMaxAttempts = async (
+      msg: amqp.ConsumeMessage,
+      handler: (msg: amqp.ConsumeMessage) => Promise<void>,
+      queueName: string,
+      maxAttempts: number = 3,
+    ) => {
+      const content = JSON.parse(msg.content.toString());
+      const retries = (msg.properties.headers?.["x-retries"] as number) || 0;
 
-    await this.channel.consume(this.queueEmail, async (msg) => {
-      console.log("Consuming email messages");
-      if (msg) {
-        try {
-          const content: MailOptions = JSON.parse(msg.content.toString());
-          logger.info("Email message received", { content });
-          await this.handleEmail(content);
+      try {
+        await handler(msg);
+        logger.info(`${queueName} message processed successfully`, { content });
+        this.channel!.ack(msg);
+      } catch (err) {
+        if (retries < maxAttempts) {
+          logger.warn(`${queueName} message processing failed, retrying...`, { content, error: err, attempt: retries + 1 });
           this.channel!.ack(msg);
-        } catch (err) {
-          logger.error("Failed to process email message", { error: err });
-          this.channel!.nack(msg, false, false);
+          this.channel!.sendToQueue(queueName, Buffer.from(JSON.stringify(content)), {
+            headers: { "x-retries": retries + 1 },
+            persistent: true,
+          });
+        } else {
+          logger.error(`${queueName} message processing failed after ${maxAttempts} attempts`, { content, error: err });
+          this.channel!.ack(msg);
         }
       }
-    });
+    };
 
-    await this.channel.consume(this.queueSlack, async (msg) => {
-      if (msg) {
-        try {
-          const content: SlackOptions = JSON.parse(msg.content.toString());
-          logger.info("Slack message received", { content });
-          await this.handleSlack(content);
-          this.channel!.ack(msg);
-        } catch (err) {
-          logger.error("Failed to process slack message", { error: err });
-          this.channel!.nack(msg, false, false);
+    await this.channel.consume(
+      this.queueEmail,
+      async (msg) => {
+        if (msg) {
+          await retryWithMaxAttempts(
+            msg,
+            async (m) => {
+              const content: MailOptions = JSON.parse(m.content.toString());
+              await this.handleEmail(content);
+            },
+            this.queueEmail,
+          );
         }
-      }
-    });
+      },
+      { noAck: false },
+    );
 
-    await this.channel.consume(this.queueDiscord, async (msg) => {
-      if (msg) {
-        try {
-          const content: DiscordOptions = JSON.parse(msg.content.toString());
-          logger.info("Discord message received", { content });
-          await this.handleDiscord(content);
-          this.channel!.ack(msg);
-        } catch (err) {
-          logger.error("Failed to process discord message", { error: err });
-          this.channel!.nack(msg, false, false);
+    await this.channel.consume(
+      this.queueSlack,
+      async (msg) => {
+        if (msg) {
+          await retryWithMaxAttempts(
+            msg,
+            async (m) => {
+              const content: SlackOptions = JSON.parse(m.content.toString());
+              await this.handleSlack(content);
+            },
+            this.queueSlack,
+          );
         }
-      }
-    });
+      },
+      { noAck: false },
+    );
+
+    await this.channel.consume(
+      this.queueDiscord,
+      async (msg) => {
+        if (msg) {
+          await retryWithMaxAttempts(
+            msg,
+            async (m) => {
+              const content: DiscordOptions = JSON.parse(m.content.toString());
+              await this.handleDiscord(content);
+            },
+            this.queueDiscord,
+          );
+        }
+      },
+      { noAck: false },
+    );
   }
 
   private async handleEmail(content: MailOptions): Promise<void> {
