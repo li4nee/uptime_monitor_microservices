@@ -20,6 +20,6 @@ export async function sendEmail(to: string | string[], mailOptions: Omit<MailOpt
     await Promise.all(sendPromises);
   } catch (error) {
     logger.error("Error sending email:", error);
-    return;
+    throw error;
   }
 }

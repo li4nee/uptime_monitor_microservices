@@ -427,7 +427,6 @@ monitorV1HistoryRouter.get("/monthly-overview", Wrapper(MonitorHistoryController
  *       500:
  *         description: Internal server error
  */
-
 monitorV1HistoryRouter.get("/sla-report-history", Wrapper(MonitorHistoryController.getSLAreportHistory.bind(MonitorHistoryController)));
 
 /**

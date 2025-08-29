@@ -5,5 +5,6 @@ export async function sendDiscordMessage(webhookUrl: string, message: string): P
     await axios.post(webhookUrl, { content: message });
   } catch (error) {
     console.error(`Failed to send Discord message to ${webhookUrl}:`, error);
+    throw error;
   }
 }

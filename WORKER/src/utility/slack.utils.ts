@@ -5,5 +5,6 @@ export async function sendSlackMessage(webhookUrl: string, message: string): Pro
     await axios.post(webhookUrl, { text: message });
   } catch (error) {
     console.error(`Failed to send Slack message to ${webhookUrl}:`, error);
+    throw error;
   }
 }
