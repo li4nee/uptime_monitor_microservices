@@ -5,7 +5,6 @@ import { logger } from "../utility/logger.utils";
 import { GlobalSettings } from "../globalSettings";
 import { LoginStore } from "../utility/login.utils";
 import { setCookie } from "../utility/base.utils";
-// make sure this path matches your actual logger file
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   const authorizedRequest = req as AuthenticatedRequest;
